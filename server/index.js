@@ -27,22 +27,22 @@ app.use(bodyParser.urlencoded({limit: '50mb', extended: true, parameterLimit: 50
 /**
  * Unprotected PATHs
  */
-app.get("/login", (req, res) => {
+app.get("/shoeper-bowl/login", (req, res) => {
     res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
 });
-app.get("/signup", (req, res) => {
+app.get("/shoeper-bowl/signup", (req, res) => {
     res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
 });
-app.get("/forgotPW", (req, res) => {
+app.get("/shoeper-bowl/forgotPW", (req, res) => {
     res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
 });
 
-app.use('/api/auth', require('./api/Auth'));
+app.use('/shoeper-bowl/api/auth', require('./api/Auth'));
 
 /**
  * Admin protected path
  */
-app.use('/api/Admin', async (req, res, next) => {
+app.use('/shoeper-bowl/api/Admin', async (req, res, next) => {
     try {
         let userInfo = await checkAdmin(req, res)
         if (userInfo?.Role === "Admin") {
@@ -62,7 +62,7 @@ app.use('/api/Admin', async (req, res, next) => {
 /**
  * All others (protected for login)
  */
-app.use('/api', async (req, res, next) => {
+app.use('/shoeper-bowl/api', async (req, res, next) => {
     try {
         const data = await checkLogin(req);
         if (data?.status === 200) {
@@ -79,11 +79,11 @@ app.use('/api', async (req, res, next) => {
     }
 }, require('./api'));
 
-app.get("/assets", (req, res) => {
+app.get("/shoeper-bowl/assets", (req, res) => {
     res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
 });
 
-app.get(/.*/, async (req, res, next) => {
+app.get("/shoeper-bowl", async (req, res, next) => {
     try {
         const data = await checkLogin(req, res);
         if (data?.status === 200) {

@@ -10,13 +10,13 @@ router
         let userInfo = await checkAdmin(req, res)
         if (userInfo?.Role === "Admin") {
             settings = [
-                {name: `${userInfo?.firstName} ${userInfo?.lastName}`, link: '/profile'},
-                {name: 'Admin', link: '/Admin'},
-                {name: 'Logout', link: '/logout'}]
+                {name: `${userInfo?.firstName} ${userInfo?.lastName}`, link: '/shoeper-bowl/profile'},
+                {name: 'Admin', link: '/shoeper-bowl/Admin'},
+                {name: 'Logout', link: '/shoeper-bowl/logout'}]
         } else {
             settings = [
-                {name: `${userInfo?.firstName} ${userInfo?.lastName}`, link: '/profile'},
-                {name: 'Logout', link: '/logout'}
+                {name: `${userInfo?.firstName} ${userInfo?.lastName}`, link: '/shoeper-bowl/profile'},
+                {name: 'Logout', link: '/shoeper-bowl/logout'}
             ]
         }
 
