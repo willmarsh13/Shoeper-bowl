@@ -15,7 +15,7 @@ export default async function getGameInfo(): Promise<GameInfo> {
         .then(data => {
             if (data.status === 401 && !allowedPages.includes(window.location.pathname)) {
                 // Redirect to login or display a message
-                window.location.href = "/login";
+                window.location.href = "/shoeper-bowl/login";
                 return {
                     round: 'WILD_CARD',
                     teams: [''],

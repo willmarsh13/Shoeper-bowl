@@ -26,7 +26,7 @@ export default function ForgotPW() {
                         </Grid>
                         <Grid size={12}>
                             <Typography variant="body2" margin={1} textAlign='center'>
-                                <a style={{color: 'white'}} href="/login">Return to Login</a>
+                                <a style={{color: 'white'}} href="/shoeper-bowl/login">Return to Login</a>
                             </Typography>
                         </Grid>
                     </Grid>

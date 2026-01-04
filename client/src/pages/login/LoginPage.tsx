@@ -18,7 +18,7 @@ export default function LoginPage() {
             .then(resp => resp.json())
             .then(data => {
                 if (data.status === 200) {
-                    window.location.href = "/"
+                    window.location.href = "/shoeper-bowl"
                 }
             })
     }, [])
@@ -49,7 +49,7 @@ export default function LoginPage() {
         CheckLogin(username, password)
             .then((data) => {
                 if (data.status === 200) {
-                    window.location.href = '/'
+                    window.location.href = '/shoeper-bowl'
                 } else {
                     enqueueSnackbar(data.message, {variant: data?.variant || 'error'})
                     setUsername('')
@@ -131,13 +131,13 @@ export default function LoginPage() {
 
                             <Grid size={6}>
                                 <Typography variant="body2" margin={1}>
-                                    <a style={{color: 'white'}} href="/ForgotPW">Forgot
+                                    <a style={{color: 'white'}} href="/shoeper-bowl/ForgotPW">Forgot
                                         password?</a>
                                 </Typography>
                             </Grid>
                             <Grid size={6}>
                                 <Typography variant="body2" margin={1} textAlign="end">
-                                    <a style={{color: 'white'}} href="/SignUp">New User? Sign-up!</a>
+                                    <a style={{color: 'white'}} href="/shoeper-bowl/SignUp">New User? Sign-up!</a>
                                 </Typography>
                             </Grid>
 

@@ -50,7 +50,7 @@ export default function Header({settings, userInfo}: HeaderProps) {
                         variant="h6"
                         noWrap
                         component="a"
-                        href='/'
+                        href='/shoeper-bowl'
                         sx={{
                             mr: 2,
                             display: {xs: 'none', md: 'flex'},
@@ -102,7 +102,7 @@ export default function Header({settings, userInfo}: HeaderProps) {
                         variant="h5"
                         noWrap
                         component="a"
-                        href="/"
+                        href="/shoeper-bowl"
                         sx={{
                             mr: 2,
                             display: {xs: 'flex', md: 'none'},

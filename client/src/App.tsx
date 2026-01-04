@@ -18,7 +18,7 @@ export const pages: page[] = [
         id: 0,
         element: <HomePage/>,
         name: 'Home',
-        link: '/',
+        link: '/shoeper-bowl',
         isIndex: true,
         showOnHeader: true,
         showInNavBar: true,
@@ -27,7 +27,7 @@ export const pages: page[] = [
         id: 1,
         element: <BuildTeam/>,
         name: 'Team Builder',
-        link: '/BuildTeam',
+        link: '/shoeper-bowl/BuildTeam',
         isIndex: false,
         showOnHeader: true,
         showInNavBar: true,
@@ -36,7 +36,7 @@ export const pages: page[] = [
         id: 2,
         element: <Admin/>,
         name: 'Admin',
-        link: '/Admin',
+        link: '/shoeper-bowl/Admin',
         isIndex: false,
         showOnHeader: false,
         showInNavBar: false,
@@ -45,7 +45,7 @@ export const pages: page[] = [
         id: 3,
         element: <Profile/>,
         name: 'Profile',
-        link: '/Profile',
+        link: '/shoeper-bowl/Profile',
         isIndex: false,
         showOnHeader: false,
         showInNavBar: true,
@@ -54,7 +54,7 @@ export const pages: page[] = [
         id: 5,
         element: <LoginPage/>,
         name: 'Login',
-        link: '/login',
+        link: '/shoeper-bowl/login',
         isIndex: false,
         showOnHeader: false,
         showInNavBar: false,
@@ -63,7 +63,7 @@ export const pages: page[] = [
         id: 6,
         element: <ForgotPW/>,
         name: 'Forgot Password',
-        link: '/forgotPW',
+        link: '/shoeper-bowl/forgotPW',
         isIndex: false,
         showOnHeader: false,
         showInNavBar: false,
@@ -72,7 +72,7 @@ export const pages: page[] = [
         id: 7,
         element: <SignUp/>,
         name: 'Sign Up',
-        link: '/signUp',
+        link: '/shoeper-bowl/signUp',
         isIndex: false,
         showOnHeader: false,
         showInNavBar: false,
@@ -97,7 +97,7 @@ export default function App() {
             .then((data) => {
                 if (data.status === 401 && !allowedPages.includes(window.location.pathname)) {
                     // Redirect to login or display a message
-                    window.location.href = "/login";
+                    window.location.href = "/shoeper-bowl/login";
                     return;
                 }
                 setSettings(data?.settings);

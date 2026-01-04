@@ -7,5 +7,5 @@ export default async function logout() {
         headers: {'content-type': 'application/json'},
         credentials: 'include'
     })
-        .then(() => window.location.href = "/login")
+        .then(() => window.location.href = "/shoeper-bowl/login")
 }

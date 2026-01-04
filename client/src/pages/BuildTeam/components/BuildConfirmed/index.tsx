@@ -52,7 +52,7 @@ export default function BuildConfirmedDialog({
                         onClick={handleClickClose}
                         variant="contained"
                         color="success"
-                        href='/profile'
+                        href='/shoeper-bowl/profile'
                     >
                         View Picks!
                     </Button>
