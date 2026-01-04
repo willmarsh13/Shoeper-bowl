@@ -4,7 +4,7 @@ const cors = require("cors");
 const path = require("path");
 const bodyParser = require("body-parser");
 const {checkLogin, checkAdmin} = require('./api/Auth/authorization');
-const port = 3001;
+const port = 3002;
 
 app.use(express.static(path.resolve(__dirname, "../client/build")));
 app.timeout = 60000;
@@ -14,6 +14,7 @@ app.use(cors({
     origin: [
         'http://localhost:3000',
         'http://localhost:3001',
+        'http://localhost:3002',
         'https://willmarsh.dev',
     ], // Add your allowed origins here
     credentials: true,
