@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "backend for prestons postseason fantasy football challenge (input)",
   "main": "index.js",
+  "homepage": "/shoeper-bowl",
   "scripts": {
     "startDev": "nodemon index.js",
     "startProd": "node index.js",

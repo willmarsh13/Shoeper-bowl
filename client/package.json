@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "frontend for prestons fantasy football challenge (input)",
   "main": "index.js",
+  "homepage": "/shoeper-bowl",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build"
