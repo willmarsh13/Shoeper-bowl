@@ -10,7 +10,7 @@ router.use('/Auth', require('./Auth'))
 router.use('/HTML', require('./HTML'))
 
 router.use('/playerSearch', require('./PlayerSearch'))
-router.use('/game', require('./game'))
-router.use('/picks', require('./picks'))
+router.use('/game', require('./Game'))
+router.use('/picks', require('./Picks'))
 
 module.exports = router;

@@ -57,7 +57,7 @@ app.use('/api/Admin', async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-}, require('./api/admin'));
+}, require('./api/Admin'));
 
 /**
  * All others (protected for login)
