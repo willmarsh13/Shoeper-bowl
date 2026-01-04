@@ -140,3 +140,6 @@ vite.config.ts.timestamp-*
 
 /.idea
 server/api/databaseCreds.js
+
+server/package-lock.json
+client/package-lock.json
