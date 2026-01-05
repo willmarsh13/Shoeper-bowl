@@ -6,7 +6,6 @@ const bodyParser = require("body-parser");
 const {checkLogin, checkAdmin} = require('./api/Auth/authorization');
 const port = 3002;
 
-app.use(express.static(path.resolve(__dirname, "../client/build")));
 app.timeout = 60000;
 
 // dependencies
@@ -91,7 +90,7 @@ app.get("/shoeper-bowl", async (req, res, next) => {
         if (data?.status === 200) {
             res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
         } else {
-            return res.redirect(`http://${req.headers.host}/shoeper-bowl/login`);
+            return res.redirect(`https://${req.headers.host}/shoeper-bowl/login`);
         }
     } catch (error) {
         console.log(error);
