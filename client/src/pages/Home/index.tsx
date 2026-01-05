@@ -57,7 +57,7 @@ const Home: React.FC = () => {
                                 fontSize: '1rem',
                                 borderRadius: 3,
                             }}
-                            href="shoeper-bowl/buildTeam"
+                            href="/shoeper-bowl/buildTeam"
                         >
                             Build My Team
                         </Button>
@@ -66,7 +66,7 @@ const Home: React.FC = () => {
                             size="small"
                             variant="text"
                             color="inherit"
-                            href="shoeper-bowl/profile"
+                            href="/shoeper-bowl/profile"
                         >
                             View My Picks
                         </Button>

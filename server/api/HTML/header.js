@@ -8,7 +8,7 @@ router
     .get(async (req, res) => {
         let settings = []
         let userInfo = await checkAdmin(req, res)
-        
+
         if (userInfo?.Role === "Admin") {
             settings = [
                 {name: `${userInfo?.firstName ?? ""} ${userInfo?.lastName ?? ""}`, link: '/shoeper-bowl/profile'},
