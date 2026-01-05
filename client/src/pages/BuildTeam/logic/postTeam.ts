@@ -1,6 +1,7 @@
 import {getURL} from "../../../Shared/getURL";
 import {PlayoffRound} from "./roundRules";
 import {Position} from "../../../Interfaces/Player";
+import checkUnauthorized from "../../../Shared/handleCheckUnauth";
 
 export interface PostPickPlayer {
     id: string;
@@ -34,4 +35,8 @@ export default async function postTeam(payload: PostTeamPayload) {
         body: JSON.stringify(payload)
     })
         .then(res => res.json())
+        .then(data => {
+            checkUnauthorized(data.status);
+            return data
+        })
 }

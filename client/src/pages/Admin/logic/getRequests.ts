@@ -1,4 +1,5 @@
 import {getURL} from "../../../Shared/getURL";
+import checkUnauthorized from "../../../Shared/handleCheckUnauth";
 
 export const getRequests = () => {
 
@@ -10,4 +11,8 @@ export const getRequests = () => {
         }
     })
         .then(resp => resp.json())
+        .then(data => {
+            checkUnauthorized(data.status);
+            return data
+        })
 }

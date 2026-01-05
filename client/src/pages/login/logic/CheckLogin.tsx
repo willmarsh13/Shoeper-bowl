@@ -1,8 +1,9 @@
 import {getURL} from "../../../Shared/getURL";
+import checkUnauthorized from "../../../Shared/handleCheckUnauth";
 
 
 export default async function CheckLogin(username: string, password: string) {
-    const resp = await fetch(`${getURL()}/api/auth/login`, {
+    return await fetch(`${getURL()}/api/auth/login`, {
         body: JSON.stringify({
             username: username,
             password: password,
@@ -10,6 +11,10 @@ export default async function CheckLogin(username: string, password: string) {
         method: 'POST',
         headers: {'content-type': 'application/json'},
         credentials: 'include'
-    });
-    return await resp.json();
+    })
+        .then(resp => resp.json())
+        .then(data => {
+            checkUnauthorized(data.status);
+            return data
+        })
 }

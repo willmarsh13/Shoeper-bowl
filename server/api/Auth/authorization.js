@@ -221,12 +221,12 @@ async function getUserInfo(req) {
     const sessionCollection = client.db('Authorization').collection('ActiveSessions');
     const filter = {Token: token}
     const user = await sessionCollection.findOne(filter)
-    if (user) {
-        const userFilter = {Email: user?.Email}
+
+    if (user && user.Email) {
+        const userFilter = {Email: user.Email}
 
         const userCollection = client.db('Authorization').collection('Users');
-        const accountInfo = await userCollection.findOne(userFilter)
-        return accountInfo
+        return await userCollection.findOne(userFilter)
     } else {
         return null
     }

@@ -128,7 +128,7 @@ export default function Header({settings, userInfo}: HeaderProps) {
                         ))}
                     </Box>
                     <Box sx={{flexGrow: 0}}>
-                        <Tooltip title="Open settings">
+                        <Tooltip title={settings && settings.length ? "Open settings" : ""}>
                             <IconButton onClick={handleOpenUserMenu} sx={{p: 0}}>
                                 <Avatar
                                     alt="">{userInfo?.firstName ? `${userInfo?.firstName?.charAt(0)}${userInfo?.lastName?.charAt(0)}` : ""}</Avatar>
@@ -147,7 +147,7 @@ export default function Header({settings, userInfo}: HeaderProps) {
                                 vertical: 'top',
                                 horizontal: 'right',
                             }}
-                            open={Boolean(profileOpen)}
+                            open={Boolean(settings && settings.length ? profileOpen : false)}
                             onClose={handleCloseUserMenu}
                         >
                             {settings?.map((setting: Setting) => (

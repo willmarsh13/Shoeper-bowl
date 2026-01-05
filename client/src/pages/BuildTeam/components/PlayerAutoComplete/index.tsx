@@ -2,19 +2,19 @@ import * as React from 'react';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import debounce from 'lodash.debounce';
-import { useListRef } from 'react-window';
-import { Paper } from '@mui/material';
-import { useSelector } from 'react-redux';
+import {useListRef} from 'react-window';
+import {Paper} from '@mui/material';
+import {useSelector} from 'react-redux';
 
-import { Player, Position } from '../../../../Interfaces/Player';
-import { getPlayers } from '../../logic/getPlayers';
-import { ListboxComponent, StyledPopper } from './logic/helpers';
+import {Player, Position} from '../../../../Interfaces/Player';
+import {getPlayers} from '../../logic/getPlayers';
+import {ListboxComponent, StyledPopper} from './logic/helpers';
 import {
     deriveAllowedTeams,
     PlayoffRound,
     ROUND_CONFIG,
 } from '../../logic/roundRules';
-import { RootState } from '../../../../redux/store';
+import {RootState} from '../../../../redux/store';
 
 interface Props {
     selectedPlayers: Player[];
@@ -144,7 +144,7 @@ const PlayerAutoComplete: React.FC<Props> = ({
 
         const index = optionIndexMapRef.current.get(option.full_name);
         if (index !== undefined) {
-            internalListRef.current.scrollToRow({ index, align: 'auto' });
+            internalListRef.current.scrollToRow({index, align: 'auto'});
         }
     };
 
@@ -251,7 +251,7 @@ const PlayerAutoComplete: React.FC<Props> = ({
     ------------------------------------------------------------------ */
 
     return (
-        <Paper sx={{ padding: 1 }}>
+        <Paper sx={{padding: 1}}>
             <Autocomplete<Player>
                 inputValue={searchTerm}
                 loading={loading}
@@ -269,13 +269,13 @@ const PlayerAutoComplete: React.FC<Props> = ({
                     setSearchTerm('');
                 }}
                 renderInput={(params) => (
-                    <TextField {...params} label="Search player" />
+                    <TextField {...params} label="Search for a player..."/>
                 )}
                 renderOption={(props, option, state) =>
                     [props, option, state.index] as React.ReactNode
                 }
                 renderGroup={(params) => params as any}
-                slots={{ popper: StyledPopper }}
+                slots={{popper: StyledPopper}}
                 slotProps={{
                     listbox: {
                         component: ListboxComponent,

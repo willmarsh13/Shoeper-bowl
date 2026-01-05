@@ -18,8 +18,7 @@ export default function ForgotPW() {
                 <Paper elevation={24} sx={{minWidth: '50%', padding: '30px'}}>
                     <Grid container>
                         <Grid size={12}>
-                            <Typography variant="h4" textAlign='center'> To reset your password, contact Will or
-                                Ashlyn</Typography>
+                            <Typography variant="h4" textAlign='center'> To reset your password, contact Will Marsh</Typography>
                         </Grid>
                         <Grid size={12} marginY={2}>
                             <Divider/>

@@ -1,4 +1,5 @@
-import { getURL } from "../../../Shared/getURL";
+import {getURL} from "../../../Shared/getURL";
+import checkUnauthorized from "../../../Shared/handleCheckUnauth";
 
 // Define a type for the user object you send
 export interface RequestUser {
@@ -19,14 +20,17 @@ export async function UpdateRequest(
     user: RequestUser,
     isApproved: boolean
 ): Promise<UpdateRequestResponse> {
-    const resp = await fetch(`${getURL()}/api/admin/requests/update`, {
+    return await fetch(`${getURL()}/api/admin/requests/update`, {
         method: 'POST',
-        body: JSON.stringify({ user, isApproved }),
+        body: JSON.stringify({user, isApproved}),
         headers: {
             'Content-Type': 'application/json',
         },
         credentials: 'include',
-    });
-
-    return resp.json(); // returns Promise<UpdateRequestResponse>
+    })
+        .then(resp => resp.json())
+        .then(data => {
+            checkUnauthorized(data.status);
+            return data
+        })
 }

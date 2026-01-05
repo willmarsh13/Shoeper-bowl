@@ -1,5 +1,6 @@
-import { Player } from '../../../Interfaces/Player';
-import { getURL } from '../../../Shared/getURL';
+import {Player} from '../../../Interfaces/Player';
+import {getURL} from '../../../Shared/getURL';
+import checkUnauthorized from "../../../Shared/handleCheckUnauth";
 
 export interface GetPlayersParams {
     search?: string;
@@ -35,16 +36,15 @@ export async function getPlayers(
         }
     });
 
-    const res = await fetch(`${getURL()}/api/playerSearch?${query}`, {
+    return await fetch(`${getURL()}/api/playerSearch?${query}`, {
         headers: {
             "Content-type": "application/json; charset=UTF-8"
         },
         credentials: 'include'
-    });
-
-    if (!res.ok) {
-        throw new Error(`Failed to fetch players (${res.status})`);
-    }
-
-    return res.json();
+    })
+        .then(res => res.json())
+        .then(data => {
+            checkUnauthorized(data.status);
+            return data
+        })
 }

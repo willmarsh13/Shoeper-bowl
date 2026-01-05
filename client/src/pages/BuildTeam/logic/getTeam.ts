@@ -1,4 +1,5 @@
 import {getURL} from "../../../Shared/getURL"
+import checkUnauthorized from "../../../Shared/handleCheckUnauth";
 
 export default async function getTeam() {
 
@@ -9,4 +10,8 @@ export default async function getTeam() {
         credentials: 'include',
     })
         .then(res => res.json())
+        .then(data => {
+            checkUnauthorized(data.status);
+            return data
+        })
 }

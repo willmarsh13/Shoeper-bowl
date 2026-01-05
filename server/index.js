@@ -37,6 +37,8 @@ app.get("/shoeper-bowl/forgotPW", (req, res) => {
     res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
 });
 
+app.use('/shoeper-bowl/api/HTML', require('./api/HTML'));
+
 app.use('/shoeper-bowl/api/auth', require('./api/Auth'));
 
 /**
@@ -89,7 +91,7 @@ app.get("/shoeper-bowl", async (req, res, next) => {
         if (data?.status === 200) {
             res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
         } else {
-            return res.redirect(`http://${req.headers.host}/login`);
+            return res.redirect(`http://${req.headers.host}/shoeper-bowl/login`);
         }
     } catch (error) {
         console.log(error);

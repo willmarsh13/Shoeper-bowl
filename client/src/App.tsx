@@ -12,6 +12,7 @@ import {getURL} from "./Shared/getURL";
 import {enqueueSnackbar} from "notistack";
 import {allowedPages} from "./Shared/logic/getGameInfo";
 import Profile from "./pages/Profile";
+import checkUnauthorized from "./Shared/handleCheckUnauth";
 
 export const pages: page[] = [
     {
@@ -19,6 +20,7 @@ export const pages: page[] = [
         element: <HomePage/>,
         name: 'Home',
         link: '/shoeper-bowl',
+        routerLink: '/',
         isIndex: true,
         showOnHeader: true,
         showInNavBar: true,
@@ -28,6 +30,7 @@ export const pages: page[] = [
         element: <BuildTeam/>,
         name: 'Team Builder',
         link: '/shoeper-bowl/BuildTeam',
+        routerLink: '/BuildTeam',
         isIndex: false,
         showOnHeader: true,
         showInNavBar: true,
@@ -37,6 +40,7 @@ export const pages: page[] = [
         element: <Admin/>,
         name: 'Admin',
         link: '/shoeper-bowl/Admin',
+        routerLink: '/Admin',
         isIndex: false,
         showOnHeader: false,
         showInNavBar: false,
@@ -46,6 +50,7 @@ export const pages: page[] = [
         element: <Profile/>,
         name: 'Profile',
         link: '/shoeper-bowl/Profile',
+        routerLink: '/Profile',
         isIndex: false,
         showOnHeader: false,
         showInNavBar: true,
@@ -55,6 +60,7 @@ export const pages: page[] = [
         element: <LoginPage/>,
         name: 'Login',
         link: '/shoeper-bowl/login',
+        routerLink: '/login',
         isIndex: false,
         showOnHeader: false,
         showInNavBar: false,
@@ -64,6 +70,7 @@ export const pages: page[] = [
         element: <ForgotPW/>,
         name: 'Forgot Password',
         link: '/shoeper-bowl/forgotPW',
+        routerLink: '/forgotPW',
         isIndex: false,
         showOnHeader: false,
         showInNavBar: false,
@@ -73,6 +80,7 @@ export const pages: page[] = [
         element: <SignUp/>,
         name: 'Sign Up',
         link: '/shoeper-bowl/signUp',
+        routerLink: '/signUp',
         isIndex: false,
         showOnHeader: false,
         showInNavBar: false,
@@ -95,11 +103,7 @@ export default function App() {
         })
             .then((resp) => resp?.json())
             .then((data) => {
-                if (data.status === 401 && !allowedPages.includes(window.location.pathname)) {
-                    // Redirect to login or display a message
-                    window.location.href = "/shoeper-bowl/login";
-                    return;
-                }
+                checkUnauthorized(data.status);
                 setSettings(data?.settings);
                 setUserInfo(data?.accountInfo);
             })
@@ -110,11 +114,11 @@ export default function App() {
 
     return (
         <>
-            <BrowserRouter>
+            <BrowserRouter basename="/shoeper-bowl">
                 {!allowedPages.includes(window.location.pathname) && <Header settings={settings} userInfo={userInfo}/>}
                 <Routes>
-                    {pages.map(({id, link, isIndex, element}) => (
-                        <Route key={id} index={isIndex} path={link} element={element}/>
+                    {pages.map(({id, routerLink, isIndex, element}) => (
+                        <Route key={id} index={isIndex} path={routerLink} element={element}/>
                     ))}
                 </Routes>
             </BrowserRouter>
