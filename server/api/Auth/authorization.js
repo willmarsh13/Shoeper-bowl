@@ -2,6 +2,9 @@ const crypto = require('crypto');
 const client = require('./../MongoClient');
 const bcrypt = require('bcryptjs');
 
+const {SendEmail} = require("../services/emailService");
+
+
 async function generateToken() {
     let token = crypto.randomBytes(48).toString('hex');
 
@@ -272,7 +275,15 @@ async function signUp(req) {
             message: "User already exists. Please log in."
         };
     } else if (createAccountResp.acknowledged && createAccountResp.upsertedCount === 1 && createRequestResp.acknowledged && createRequestResp.upsertedCount === 1) {
-        // return await SignUserIn(req, res)
+
+        await sendSignupApprovalEmail({
+            firstName,
+            lastName,
+            userEmail: email,
+            approveUrl: "https://willmarsh.dev/shoeper-bowl?linkto=adminApproveSignUp",
+            rejectUrl: "https://willmarsh.dev/shoeper-bowl?linkto=adminRejectSignUp",
+        })
+
         return {
             status: 200,
             variant: 'success',
@@ -287,6 +298,34 @@ async function signUp(req) {
     }
 }
 
+async function sendSignupApprovalEmail({
+                                           firstName,
+                                           lastName,
+                                           userEmail,
+                                           approveUrl,
+                                           rejectUrl,
+                                       }) {
+    return SendEmail({
+        toEmails: [
+            "willmarsh13@gmail.com",
+            "prestonshoe21@gmail.com",
+        ],
+        subject: "New Shoeper-bowl Signup Pending Approval",
+        body: `
+            A new user has signed up for Shoeper-bowl and is awaiting approval.
+
+            Name: ${firstName} ${lastName}
+            Email: ${userEmail}
+
+            Please review the request below.
+        `,
+        ctaText: "Approve Signup",
+        ctaUrl: approveUrl,
+        secondaryText: "Reject signup",
+        secondaryUrl: rejectUrl,
+    });
+}
+
 module.exports = {
     checkLogin,
     updatePassword,
@@ -294,4 +333,5 @@ module.exports = {
     logout,
     checkAdmin: getUserInfo,
     signUp,
+    sendSignupApprovalEmail,
 };

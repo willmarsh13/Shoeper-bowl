@@ -1,7 +1,7 @@
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const creds = require('./databaseCreds')
+const {uri} = require('./databaseCreds')
 
-const client = new MongoClient(creds, {
+const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
         strict: true,
