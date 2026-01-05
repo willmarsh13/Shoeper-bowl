@@ -78,7 +78,7 @@ const ProfilePicks: React.FC<ProfilePicksProps> = ({picks}) => {
                         </TableHead>
 
                         <TableBody>
-                            {POSITION_ORDER.map((position, index) => {
+                            {POSITION_ORDER?.map((position, index) => {
                                 const rows = groupedByPosition[position];
                                 if (!rows) return null;
 
@@ -108,7 +108,7 @@ const ProfilePicks: React.FC<ProfilePicksProps> = ({picks}) => {
                                             </TableCell>
                                         </TableRow>
 
-                                        {rows.map(pick => (
+                                        {rows?.map(pick => (
                                             <TableRow key={pick.id}>
                                                 <TableCell sx={{color: 'text.secondary'}}>—</TableCell>
                                                 <TableCell>

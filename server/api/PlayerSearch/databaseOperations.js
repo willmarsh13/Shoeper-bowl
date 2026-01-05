@@ -20,7 +20,7 @@ const compareNames = (a, b) => {
 };
 
 const buildDefensePlayers = (teams) =>
-    teams.map(team => ({
+    teams?.map(team => ({
         id: `DST_${team}`,
         full_name: `${team} D/ST`,
         firstName: team,

@@ -51,7 +51,7 @@ async function postPicks(req) {
     /* ----------------------------------
        Validate positions & counts
     ---------------------------------- */
-    const allowedPositionCounts = roundConfig.allowedPositions.reduce((acc, pos) => {
+    const allowedPositionCounts = roundConfig?.allowedPositions.reduce((acc, pos) => {
         acc[pos] = (acc[pos] || 0) + 1;
         return acc;
     }, {});
@@ -124,7 +124,7 @@ async function postPicks(req) {
     /* ----------------------------------
        Validate duplicate players
     ---------------------------------- */
-    const playerKeys = roster.map(s =>
+    const playerKeys = roster?.map(s =>
         `${s.player.full_name}|${s.player.team}|${s.player.position}`
     );
 

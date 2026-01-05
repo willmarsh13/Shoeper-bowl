@@ -72,7 +72,7 @@ const PlayerAutoComplete: React.FC<Props> = ({
     ------------------------------------------------------------------ */
 
     const remainingPositions = React.useMemo<Position[]>(() => {
-        const allowedCounts = roundConfig.allowedPositions.reduce<Record<string, number>>(
+        const allowedCounts = roundConfig?.allowedPositions.reduce<Record<string, number>>(
             (acc, pos) => {
                 acc[pos] = (acc[pos] || 0) + 1;
                 return acc;
@@ -89,12 +89,12 @@ const PlayerAutoComplete: React.FC<Props> = ({
         );
 
         return Object.entries(allowedCounts)
-            .filter(([pos, allowed]) => {
+            ?.filter(([pos, allowed]) => {
                 const used = usedCounts[pos] || 0;
                 return used < allowed;
             })
-            .map(([pos]) => pos as Position);
-    }, [roundConfig.allowedPositions, selectedPlayers]);
+            ?.map(([pos]) => pos as Position);
+    }, [roundConfig?.allowedPositions, selectedPlayers]);
 
     /* ------------------------------------------------------------------
        Apply optional UI position filter
@@ -121,8 +121,8 @@ const PlayerAutoComplete: React.FC<Props> = ({
         }, {});
 
         return Object.entries(counts)
-            .filter(([, count]) => count >= roundConfig.maxPlayersPerTeam)
-            .map(([team]) => team);
+            ?.filter(([, count]) => count >= roundConfig.maxPlayersPerTeam)
+            ?.map(([team]) => team);
     }, [selectedPlayers, roundConfig.maxPlayersPerTeam]);
 
     /* ------------------------------------------------------------------

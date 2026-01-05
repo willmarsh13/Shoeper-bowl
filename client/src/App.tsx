@@ -117,7 +117,7 @@ export default function App() {
             <BrowserRouter basename="/shoeper-bowl">
                 {!allowedPages.includes(window.location.pathname) && <Header settings={settings} userInfo={userInfo}/>}
                 <Routes>
-                    {pages.map(({id, routerLink, isIndex, element}) => (
+                    {pages?.map(({id, routerLink, isIndex, element}) => (
                         <Route key={id} index={isIndex} path={routerLink} element={element}/>
                     ))}
                 </Routes>

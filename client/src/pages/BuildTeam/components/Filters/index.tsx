@@ -36,7 +36,7 @@ export const Filters: React.FC = () => {
 
     const uniquePositions = React.useMemo<Position[]>(() => {
         return Array.from(
-            new Set(roster.map(s => s.position))
+            new Set(roster?.map(s => s.position))
         ) as Position[];
     }, [roster]);
 
@@ -56,7 +56,7 @@ export const Filters: React.FC = () => {
                             renderValue={(selected) => selected.join(', ')}
                             onChange={handleTeamFilterChange}
                         >
-                            {playoffTeams.map(team => (
+                            {playoffTeams?.map(team => (
                                 <MenuItem key={team} value={team}>
                                     <Stack direction='row' alignItems='center'>
                                         <Checkbox sx={{paddingY: 0.5}} checked={teamFilters.includes(team)}/>
@@ -82,7 +82,7 @@ export const Filters: React.FC = () => {
                             renderValue={(selected) => selected.join(', ')}
                             onChange={handlePositionFilterChange}
                         >
-                            {uniquePositions.map(position => (
+                            {uniquePositions?.map(position => (
                                 <MenuItem key={position} value={position}>
                                     <Stack direction='row' alignItems='center'>
                                         <Checkbox sx={{paddingY: 0.5}} checked={positionFilters.includes(position)}/>

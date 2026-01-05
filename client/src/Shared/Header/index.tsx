@@ -89,7 +89,7 @@ export default function Header({settings, userInfo}: HeaderProps) {
                             onClose={handleCloseNavMenu}
                             sx={{display: {xs: 'block', md: 'none'}}}
                         >
-                            {pages.filter(pg => pg.showInNavBar).map(({id, link, name}) => (
+                            {pages.filter(pg => pg.showInNavBar)?.map(({id, link, name}) => (
                                 <a key={id} href={link} style={{textDecoration: 'none', color: 'inherit'}}>
                                     <MenuItem key={id} href={link}>
                                         <Typography sx={{textAlign: 'center'}}>{name}</Typography>
@@ -117,7 +117,7 @@ export default function Header({settings, userInfo}: HeaderProps) {
                         SHOE-PER BOWL
                     </Typography>
                     <Box sx={{flexGrow: 1, display: {xs: 'none', md: 'flex'}}}>
-                        {pages.filter(page => page.showOnHeader).map(({id, link, name}) => (
+                        {pages.filter(page => page.showOnHeader)?.map(({id, link, name}) => (
                             <Button
                                 key={id}
                                 href={link}

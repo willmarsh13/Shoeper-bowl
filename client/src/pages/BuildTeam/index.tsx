@@ -55,7 +55,7 @@ const BuildTeam: React.FC = () => {
     }, [dispatch]);
 
     const normalizeRoster = (slots: RosterSlot[]) =>
-        slots.map(s => ({
+        slots?.map(s => ({
             slotId: s.slotId,
             playerName: s.player?.full_name ?? null,
             team: s.player?.team ?? null,
@@ -65,7 +65,7 @@ const BuildTeam: React.FC = () => {
     const hasChanges = useMemo(() => {
         if (!initialRoster) {
             // No saved roster → any pick means change
-            return roster.some(s => s.player);
+            return roster?.some(s => s.player);
         }
 
         const current = normalizeRoster(roster);
@@ -80,7 +80,7 @@ const BuildTeam: React.FC = () => {
 
     const teamCounts = useMemo(() => {
         const map: Record<string, number> = {};
-        roster.forEach(s => {
+        roster?.forEach(s => {
             if (s.player) {
                 map[s.player.team] = (map[s.player.team] || 0) + 1;
             }
@@ -104,7 +104,7 @@ const BuildTeam: React.FC = () => {
     const onSubmit = () => {
         const payload: PostTeamPayload = {
             round,
-            roster: roster.map(s => ({
+            roster: roster?.map(s => ({
                 slotId: s.slotId,
                 position: s.position,
                 player: s.player
@@ -135,11 +135,11 @@ const BuildTeam: React.FC = () => {
     };
 
     const allSlotsFilled = useMemo(() => {
-        return roster.every(slot => !!slot.player);
+        return roster?.every(slot => !!slot.player);
     }, [roster]);
 
     const hasAnyPick = useMemo(() => {
-        return roster.some(slot => !!slot.player);
+        return roster?.some(slot => !!slot.player);
     }, [roster]);
 
     return (
@@ -154,8 +154,8 @@ const BuildTeam: React.FC = () => {
                 <Box sx={{mb: 3}}>
                     <PlayerAutoComplete
                         selectedPlayers={roster
-                            .filter(s => s.player)
-                            .map(s => s.player!)}
+                            ?.filter(s => s.player)
+                            ?.map(s => s.player!)}
                         onSelect={onSelect}
                     />
                     {loading && <Typography variant="caption">Loading players...</Typography>}

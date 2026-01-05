@@ -108,7 +108,7 @@ export const ListboxComponent = React.forwardRef<
         if (itemCount > 8) {
             return 8 * itemSize;
         }
-        return itemData.map(getChildSize).reduce((a, b) => a + b, 0);
+        return itemData?.map(getChildSize).reduce((a, b) => a + b, 0);
     };
 
     // Separate className for List, other props for wrapper div (ARIA, handlers)

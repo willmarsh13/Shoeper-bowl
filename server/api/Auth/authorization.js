@@ -207,23 +207,10 @@ async function updatePassword(req) {
 
 async function getUserInfo(req) {
 
-    const cookies = req?.headers?.cookie
-        ?.split('; ')
-        ?.reduce((acc, cookie) => {
-            const [key, value] = cookie.split('=');
-            acc[key] = value;
-            return acc;
-        }, {});
+    const userResp = await checkLogin(req)
 
-    const token = cookies?.['secure-token-mfa'];
-
-    await client.connect();
-    const sessionCollection = client.db('Authorization').collection('ActiveSessions');
-    const filter = {Token: token}
-    const user = await sessionCollection.findOne(filter)
-
-    if (user && user.Email) {
-        const userFilter = {Email: user.Email}
+    if (userResp && userResp.user && userResp.user.Email) {
+        const userFilter = {Email: userResp.user.Email}
 
         const userCollection = client.db('Authorization').collection('Users');
         return await userCollection.findOne(userFilter)

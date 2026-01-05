@@ -143,7 +143,7 @@ export default function AccountReqs() {
                     <Typography>No Pending Accounts</Typography>
                 )}
                 <Collapse in={requestsVisible}>
-                    {displayedRequests.map((request) => (
+                    {displayedRequests?.map((request) => (
                         <ApprovalPaper key={request.id} request={request}/>
                     ))}
                 </Collapse>

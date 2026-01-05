@@ -20,7 +20,7 @@ export const generateSlots = (round: RoundType): RosterSlot[] => {
     const config: RoundConfig = ROUND_CONFIG[round];
     const counts: Record<string, number> = {};
 
-    return config?.allowedPositions.map(pos => {
+    return config?.allowedPositions?.map(pos => {
         counts[pos] = (counts[pos] || 0) + 1;
         return {
             slotId: counts[pos] > 1 ? `${pos}${counts[pos]}` : pos,
@@ -80,8 +80,8 @@ const rosterSlice = createSlice({
 
             const baseSlots = generateSlots(round);
 
-            state.slots = baseSlots.map(slot => {
-                const apiSlot = roster.find(r => r.slotId === slot.slotId);
+            state.slots = baseSlots?.map(slot => {
+                const apiSlot = roster?.find(r => r.slotId === slot.slotId);
 
                 return apiSlot
                     ? {

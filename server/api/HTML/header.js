@@ -2,12 +2,13 @@ const {checkAdmin} = require("../Auth/authorization");
 
 const router = require("express").Router();
 
-let settings = []
 
 router
     .route("/")
     .get(async (req, res) => {
+        let settings = []
         let userInfo = await checkAdmin(req, res)
+        
         if (userInfo?.Role === "Admin") {
             settings = [
                 {name: `${userInfo?.firstName ?? ""} ${userInfo?.lastName ?? ""}`, link: '/shoeper-bowl/profile'},
@@ -17,6 +18,10 @@ router
             settings = [
                 {name: `${userInfo?.firstName ?? ""} ${userInfo?.lastName ?? ""}`, link: '/shoeper-bowl/profile'},
                 {name: 'Logout', link: '/shoeper-bowl/logout'}
+            ]
+        } else {
+            settings = [
+                {name: 'Log in', link: '/shoeper-bowl/login'},
             ]
         }
 

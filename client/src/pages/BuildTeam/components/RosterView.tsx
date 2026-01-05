@@ -10,7 +10,7 @@ interface Props {
 const RosterView: React.FC<Props> = ({slots, onRemove}) => {
     return (
         <Grid container spacing={2}>
-            {slots.map(slot => (
+            {slots?.map(slot => (
                 <Grid size={{xs: 12, sm: 6, md: 4}} key={slot.slotId}>
                     <div>
                         <Card>
