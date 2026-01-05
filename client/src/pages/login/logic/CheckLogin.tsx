@@ -13,8 +13,4 @@ export default async function CheckLogin(username: string, password: string) {
         credentials: 'include'
     })
         .then(resp => resp.json())
-        .then(data => {
-            checkUnauthorized(data.status);
-            return data
-        })
 }

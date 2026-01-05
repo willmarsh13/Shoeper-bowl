@@ -37,7 +37,10 @@ app.get("/shoeper-bowl/login", (req, res) => {
 app.get("/shoeper-bowl/signup", (req, res) => {
     res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
 });
-app.get("/shoeper-bowl/forgotPW", (req, res) => {
+app.get("/shoeper-bowl/forgot-password", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
+});
+app.get("/shoeper-bowl/reset-password", (req, res) => {
     res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
 });
 
@@ -69,6 +72,7 @@ app.use('/shoeper-bowl/api/Admin', async (req, res, next) => {
  * All others (protected for login)
  */
 app.use('/shoeper-bowl/api', async (req, res, next) => {
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
     try {
         const data = await checkLogin(req);
         if (data?.status === 200) {
@@ -91,11 +95,11 @@ app.get("/shoeper-bowl/assets", (req, res) => {
 
 app.get(/.*/, async (req, res, next) => {
     try {
-        const data = await checkLogin(req, res);
+        const data = await checkLogin(req);
         if (data?.status === 200) {
             res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
         } else {
-            return res.redirect(`https://${req.headers.host}/shoeper-bowl/login`);
+            return res.redirect(`/shoeper-bowl/login`);
         }
     } catch (error) {
         console.log(error);

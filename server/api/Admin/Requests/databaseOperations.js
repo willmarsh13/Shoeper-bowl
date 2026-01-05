@@ -1,5 +1,5 @@
 const client = require('../../MongoClient');
-const {checkLogin, checkAdmin} = require("../../Auth/authorization");
+const {checkLogin, checkAdmin, sendSignupApprovedEmail} = require("../../Auth/authorization");
 
 async function getRequests(req, res) {
 
@@ -30,14 +30,31 @@ async function updateRequest(req, res) {
         return {
             status: 400,
             message: 'Missing user or isApproved value',
-            results: [],
+            variant: 'error',
         }
     }
 
     const requestCollection = (await client.connect()).db('Authorization').collection('Requests');
     const userCollection = (await client.connect()).db('Authorization').collection('Users');
 
-    const {Email, firstName, lastName} = await checkAdmin(req, res)
+    const {Email, firstName, lastName, Role, approved} = await checkAdmin(req, res)
+
+    if (!Email || !firstName || !lastName || !Role || !approved) {
+        return {
+            status: 400,
+            message: `Incomplete user information or user doesn't exist.`,
+            variant: 'error',
+        }
+    }
+
+    if (Role !== 'Admin' && Role !== 'admin') {
+        return {
+            status: 400,
+            message: `User is not authorized to approve/reject users.`,
+            variant: 'error',
+        }
+    }
+
     const timeStamp = new Date()
 
     const results = await requestCollection.findOneAndUpdate(
@@ -63,6 +80,8 @@ async function updateRequest(req, res) {
     )
 
     if (results && userResults) {
+        if (isApproved) await sendSignupApprovedEmail({userEmail: results.Email})
+
         return {
             message: 'Successfully updated user',
             status: 200,

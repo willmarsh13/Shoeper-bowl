@@ -52,7 +52,6 @@ export default function LoginPage() {
                     window.location.href = '/shoeper-bowl'
                 } else {
                     enqueueSnackbar(data.message, {variant: data?.variant || 'error'})
-                    setUsername('')
                     setPassword('')
                 }
             })
@@ -131,7 +130,7 @@ export default function LoginPage() {
 
                             <Grid size={6}>
                                 <Typography variant="body2" margin={1}>
-                                    <a style={{color: 'white'}} href="/shoeper-bowl/ForgotPW">Forgot
+                                    <a style={{color: 'white'}} href="/shoeper-bowl/forgot-password">Forgot
                                         password?</a>
                                 </Typography>
                             </Grid>

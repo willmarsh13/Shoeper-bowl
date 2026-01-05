@@ -1,5 +1,4 @@
 import {getURL} from "../../../Shared/getURL";
-import checkUnauthorized from "../../../Shared/handleCheckUnauth";
 
 export async function SignUserUp(firstName: string, lastName: string, email: string, password: string) {
 
@@ -17,8 +16,4 @@ export async function SignUserUp(firstName: string, lastName: string, email: str
         credentials: 'include',
     })
         .then(resp => resp.json())
-        .then(data => {
-            checkUnauthorized(data.status);
-            return data
-        })
 }

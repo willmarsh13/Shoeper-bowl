@@ -34,6 +34,22 @@ router
     })
 
 router
+    .route("/forgot-password")
+    .post((req, res) => {
+        authOps.requestPasswordReset(req, res).then((data) => {
+            res.status(200).json(data);
+        })
+    })
+
+router
+    .route("/reset-password")
+    .post((req, res) => {
+        authOps.resetPasswordWithToken(req, res).then((data) => {
+            res.status(200).json(data);
+        })
+    })
+
+router
     .route("/logout")
     .post((req, res) => {
         authOps.logout(req, res).then((data) => {

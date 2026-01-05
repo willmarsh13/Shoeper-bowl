@@ -1,7 +1,7 @@
 import {GameInfo} from "../../Interfaces/App";
 import {getURL} from "../getURL";
 
-export const allowedPages: string[] = ['/login', '/signup', '/forgotPW']
+export const allowedPages: string[] = ['/login', '/signup', '/forgot-password']
 
 export default async function getGameInfo(): Promise<GameInfo> {
 

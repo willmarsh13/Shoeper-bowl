@@ -4,6 +4,16 @@ const bcrypt = require('bcryptjs');
 
 const {SendEmail} = require("../services/emailService");
 
+function generatePasswordResetToken() {
+    const token = crypto.randomBytes(32).toString("hex");
+
+    const tokenHash = crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
+
+    return {token, tokenHash};
+}
 
 async function generateToken() {
     let token = crypto.randomBytes(48).toString('hex');
@@ -123,18 +133,18 @@ async function SignUserIn(req, res) {
         };
     }
 
-    if (user.approved === false) {
-        return {
-            status: 400,
-            message: 'Account has not yet been approved.',
-        }
-    }
-
     // Compare the provided password hash with the stored hashed password
     const isPasswordMatch = await bcrypt.compare(password, user.PasswordHash);
     const host = req.headers.host;
 
     if (isPasswordMatch) {
+        if (user.approved === false) {
+            return {
+                status: 400,
+                message: 'Account has not yet been approved. Please contact Will Marsh or Preston Shoemaker to approve.',
+            }
+        }
+
         // Generate token
         const token = (await generateToken()).token;
 
@@ -298,6 +308,105 @@ async function signUp(req) {
     }
 }
 
+async function requestPasswordReset(req) {
+    const email = req.body.email;
+
+    if (!email || typeof email !== "string") {
+        return {
+            status: 200,
+            message: "If an account exists, a reset email has been sent.",
+        };
+    }
+
+    await client.connect();
+    const userCollection = client.db("Authorization").collection("Users");
+    const resetCollection = client.db("Authorization").collection("PasswordResets");
+
+    const user = await userCollection.findOne({Email: email});
+
+    if (user) {
+        const {token, tokenHash} = generatePasswordResetToken();
+
+        await resetCollection.insertOne({
+            Email: email,
+            TokenHash: tokenHash,
+            ExpiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+            Used: false,
+        });
+
+        await SendEmail({
+            toEmails: [email],
+            subject: "Reset your Shoeper-bowl password",
+            body: `
+                We received a request to reset your Shoeper-bowl password.
+
+                If you made this request, click the button below.
+                This link will expire in 1 hour.
+            `,
+            ctaText: "Reset Password",
+            ctaUrl: `https://willmarsh.dev/shoeper-bowl/reset-password?token=${token}`,
+        });
+    }
+
+    return {
+        status: 200,
+        message: "If an account exists, a reset email has been sent.",
+    };
+}
+
+async function resetPasswordWithToken(req) {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+        return {
+            status: 400,
+            message: "Invalid request",
+        };
+    }
+
+    const tokenHash = crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
+
+    await client.connect();
+    const resetCollection = client.db("Authorization").collection("PasswordResets");
+    const userCollection = client.db("Authorization").collection("Users");
+    const sessionCollection = client.db("Authorization").collection("ActiveSessions");
+
+    const resetRequest = await resetCollection.findOne({
+        TokenHash: tokenHash,
+        Used: false,
+        ExpiresAt: { $gt: new Date() },
+    });
+
+    if (!resetRequest) {
+        return {
+            status: 400,
+            message: "Invalid or expired reset token",
+        };
+    }
+
+    await userCollection.updateOne(
+        { Email: resetRequest.Email },
+        { $set: { PasswordHash: await bcrypt.hash(newPassword, 12) } }
+    );
+
+    // Invalidate all sessions
+    await sessionCollection.deleteMany({ Email: resetRequest.Email });
+
+    // Mark token as used
+    await resetCollection.updateOne(
+        { _id: resetRequest._id },
+        { $set: { Used: true } }
+    );
+
+    return {
+        status: 200,
+        message: "Password reset successfully",
+    };
+}
+
 async function sendSignupApprovalEmail({
                                            firstName,
                                            lastName,
@@ -308,7 +417,7 @@ async function sendSignupApprovalEmail({
     return SendEmail({
         toEmails: [
             "willmarsh13@gmail.com",
-            "prestonshoe21@gmail.com",
+            // "prestonshoe21@gmail.com",
         ],
         subject: "New Shoeper-bowl Signup Pending Approval",
         body: `
@@ -326,6 +435,22 @@ async function sendSignupApprovalEmail({
     });
 }
 
+async function sendSignupApprovedEmail({
+                                           userEmail,
+                                       }) {
+    return SendEmail({
+        toEmails: [
+            userEmail
+        ],
+        subject: "Shoeperbowl website access granted!",
+        body: `
+            You have been granted access to the Shoeperbowl. Log in and place your picks now!
+        `,
+        ctaText: "Log in",
+        ctaUrl: "https://willmarsh.dev/shoeper-bowl/login",
+    });
+}
+
 module.exports = {
     checkLogin,
     updatePassword,
@@ -334,4 +459,7 @@ module.exports = {
     checkAdmin: getUserInfo,
     signUp,
     sendSignupApprovalEmail,
+    sendSignupApprovedEmail,
+    requestPasswordReset,
+    resetPasswordWithToken,
 };

@@ -6,13 +6,14 @@ import Header from "./Shared/Header";
 import Admin from "./pages/Admin"
 import {page} from "./Interfaces/App";
 import LoginPage from "./pages/login/LoginPage";
-import ForgotPW from "./pages/login/ForgotPW";
 import SignUp from "./pages/login/SignUp";
 import {getURL} from "./Shared/getURL";
 import {enqueueSnackbar} from "notistack";
 import {allowedPages} from "./Shared/logic/getGameInfo";
 import Profile from "./pages/Profile";
 import checkUnauthorized from "./Shared/handleCheckUnauth";
+import ForgotPassword from "./pages/login/ForgotPassword";
+import ResetPassword from "./pages/login/ResetPassword";
 
 export const pages: page[] = [
     {
@@ -56,7 +57,7 @@ export const pages: page[] = [
         showInNavBar: true,
     },
     {
-        id: 5,
+        id: 4,
         element: <LoginPage/>,
         name: 'Login',
         link: '/shoeper-bowl/login',
@@ -66,11 +67,21 @@ export const pages: page[] = [
         showInNavBar: false,
     },
     {
-        id: 6,
-        element: <ForgotPW/>,
+        id: 5,
+        element: <ForgotPassword/>,
         name: 'Forgot Password',
-        link: '/shoeper-bowl/forgotPW',
-        routerLink: '/forgotPW',
+        link: '/shoeper-bowl/forgot-password',
+        routerLink: '/forgot-password',
+        isIndex: false,
+        showOnHeader: false,
+        showInNavBar: false,
+    },
+    {
+        id: 6,
+        element: <ResetPassword/>,
+        name: 'Reset Password',
+        link: '/shoeper-bowl/reset-password',
+        routerLink: '/reset-password',
         isIndex: false,
         showOnHeader: false,
         showInNavBar: false,

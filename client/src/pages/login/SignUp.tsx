@@ -7,8 +7,9 @@ import {enqueueSnackbar} from "notistack";
 
 export default function SignUp() {
     const [username, setUsername] = useState('');
-
     const [password, setPassword] = useState('');
+
+    const [loadingSubmit, setLoadingSubmit] = useState(false);
     const [passwordVisible, setPasswordVisible] = useState(false)
     const [confPassword, setConfPassword] = useState('');
     const [confPasswordVisible, setConfPasswordVisible] = useState(false)
@@ -18,6 +19,7 @@ export default function SignUp() {
     const [submitBtnEnabled, setStubmitBtnEnabled] = useState(false);
 
     const handleSubmit = (e: { preventDefault: () => void; }) => {
+        setLoadingSubmit(true);
         e.preventDefault()
         if (submitBtnEnabled) {
             SignUserUp(firstName, lastName, username, password)
@@ -31,6 +33,9 @@ export default function SignUp() {
                     setLastName('')
                     enqueueSnackbar(resp?.message || "There was a server error.", {variant: resp?.variant || "error"})
                     return resp
+                })
+                .finally(() => {
+                    setLoadingSubmit(false);
                 })
         }
     }
@@ -162,6 +167,7 @@ export default function SignUp() {
                                     onClick={handleSubmit}
                                     variant="contained"
                                     type="submit"
+                                    loading={loadingSubmit}
                                 >
                                     Sign up!
                                 </Button>

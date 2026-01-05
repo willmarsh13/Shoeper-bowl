@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-const {gmailSecret} = ("../databaseCreds");
+const { gmailSecret } = require("../databaseCreds");
 
 async function SendEmail({
                              fromEmail = "Shoeper-bowl <willmarsh13@gmail.com>",
@@ -11,32 +11,38 @@ async function SendEmail({
                              secondaryText,
                              secondaryUrl,
                          }) {
-    const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false,
-        auth: {
-            user: 'willmarsh13@gmail.com',
-            pass: gmailSecret,
-        },
-    });
 
-    const html = buildShoeperBowlTemplate({
-        subject,
-        body,
-        ctaText,
-        ctaUrl,
-        secondaryText,
-        secondaryUrl,
-    });
+    try {
+        const transporter = nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 587,
+            secure: false,
+            auth: {
+                user: 'willmarsh13@gmail.com',
+                pass: gmailSecret,
+            },
+        });
 
-    return transporter.sendMail({
-        from: fromEmail,
-        to: toEmails.join(", "),
-        subject,
-        text: body,
-        html,
-    });
+        const html = buildShoeperBowlTemplate({
+            subject,
+            body,
+            ctaText,
+            ctaUrl,
+            secondaryText,
+            secondaryUrl,
+        });
+
+        return transporter.sendMail({
+            from: fromEmail,
+            to: toEmails.join(", "),
+            subject,
+            text: body,
+            html,
+        });
+    } catch (error) {
+        console.log(error);
+        return null
+    }
 }
 
 function buildShoeperBowlTemplate({
@@ -49,7 +55,7 @@ function buildShoeperBowlTemplate({
                                   }) {
     return `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>${subject}</title>
