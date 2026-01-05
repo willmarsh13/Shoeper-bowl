@@ -89,7 +89,7 @@ app.get("/shoeper-bowl/assets", (req, res) => {
     res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
 });
 
-app.get("/shoeper-bowl", async (req, res, next) => {
+app.get(/.*/, async (req, res, next) => {
     try {
         const data = await checkLogin(req, res);
         if (data?.status === 200) {
