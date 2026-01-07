@@ -14,7 +14,8 @@ import {
     IconButton,
     Icon,
     Stack,
-    Divider
+    Divider,
+    Tooltip
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -78,7 +79,11 @@ function AccountRow({row}: { row: AccountRequest }) {
                 <TableCell>{dayjs(row.created).format('ddd MMM D, h:mma')}</TableCell>
                 <TableCell align='center'>
                     {row.hasPicks ? (
-                        <Icon><CheckIcon color='success'/></Icon>
+                        <Tooltip title={`Submitted: ${(dayjs(row.picks[0].timestamp)).format('ddd MMM D, h:mma')}`}>
+                            <Icon>
+                                <CheckIcon color='success'/>
+                            </Icon>
+                        </Tooltip>
                     ) : (
                         <Icon><ClearIcon color='error'/></Icon>
                     )}
