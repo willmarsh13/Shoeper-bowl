@@ -1,11 +1,23 @@
 const client = require("../MongoClient");
-const {checkAdmin} = require("../Auth/authorization");
-const {ROUND_CONFIG} = require("../logic/roundRules"); // mirror of frontend config
-const {getGameInfo} = require('../Game/databaseOperations');
+const { checkAdmin } = require("../Auth/authorization");
+const { ROUND_CONFIG } = require("../logic/roundRules"); // mirror of frontend config
+const { getGameInfo } = require('../Game/databaseOperations');
 
 async function postPicks(req) {
-    const {Email, firstName, lastName} = await checkAdmin(req)
-    const {roster, round, timestamp, saved} = req.body;
+    const { Email, firstName, lastName } = await checkAdmin(req);
+    const { roster, round, timestamp, saved } = req.body;
+
+    /* ----------------------------------
+       Check game status
+    ---------------------------------- */
+    const { status: gameStatus } = await getGameInfo();
+    if (gameStatus === 'Locked') {
+        return {
+            message: 'Cannot submit picks: the round is locked. Please visit your profile to view picks.',
+            status: 400,
+            variant: 'error',
+        };
+    }
 
     /* ----------------------------------
        Basic presence checks
@@ -15,7 +27,7 @@ async function postPicks(req) {
             message: 'Roster is required and must be a non-empty array',
             status: 400,
             variant: 'error',
-        }
+        };
     }
 
     if (!round || !ROUND_CONFIG[round]) {
@@ -59,7 +71,7 @@ async function postPicks(req) {
     const usedPositionCounts = {};
 
     for (const slot of roster) {
-        const {position, player} = slot;
+        const { position, player } = slot;
 
         if (
             !player ||
@@ -145,19 +157,19 @@ async function postPicks(req) {
     const userPicksCollection = client.db('FantasyFootball').collection('UserPicks');
 
     await userPicksCollection.updateOne(
-        {email: Email, round: round},
+        { email: Email, round: round },
         {
             $set: {
                 email: Email,
-                firstName: firstName,
-                lastName: lastName,
+                firstName,
+                lastName,
                 roster,
                 round,
                 timestamp,
                 saved: !!saved,
             },
         },
-        {upsert: true}
+        { upsert: true }
     );
 
     return {
@@ -168,20 +180,20 @@ async function postPicks(req) {
 }
 
 async function getPicks(req) {
-    const {Email} = await checkAdmin(req)
+    const { Email } = await checkAdmin(req);
 
     await client.connect();
-    const {round: currentRound} = await getGameInfo(req)
+    const { round: currentRound } = await getGameInfo(req);
     const userPicksCollection = client.db('FantasyFootball').collection('UserPicks');
 
-    const results = await userPicksCollection.findOne({email: Email, round: currentRound})
+    const results = await userPicksCollection.findOne({ email: Email, round: currentRound });
 
     return {
         roster: results?.roster,
         round: results?.round,
         saved: results?.saved,
         timestamp: results?.timestamp,
-    }
+    };
 }
 
 module.exports = {

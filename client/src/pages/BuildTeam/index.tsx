@@ -27,7 +27,7 @@ const BuildTeam: React.FC = () => {
     const [successModalOpen, setSuccessModalOpen] = useState(false);
     const [loadingSavePicks, setLoadingSavedPicks] = useState<boolean>(false);
     const [initialRoster, setInitialRoster] = useState<RosterSlot[] | null>(null);
-
+    const [gameStatus, setGameStatus] = useState<'Active' | 'Locked' | 'Inactive' | null>('Locked');
 
     const dispatch = useDispatch();
     const loading = useSelector((s: RootState) => s.players.loading);
@@ -38,18 +38,17 @@ const BuildTeam: React.FC = () => {
         Promise.all([getTeam(), getGameInfo()])
             .then(([teamData, gameInfo]) => {
                 dispatch(setTeams(gameInfo.teams));
+                setGameStatus(gameInfo.status); // store status
 
                 if (teamData?.round && teamData?.roster?.length) {
                     dispatch(setRosterFromApi({
                         round: teamData.round,
                         roster: teamData.roster,
                     }));
-
-                    // store snapshot for dirty check
                     setInitialRoster(teamData.roster);
                 } else {
                     dispatch(setRound(gameInfo.round));
-                    setInitialRoster(null); // no saved roster
+                    setInitialRoster(null);
                 }
             });
     }, [dispatch]);
@@ -63,14 +62,9 @@ const BuildTeam: React.FC = () => {
         }));
 
     const hasChanges = useMemo(() => {
-        if (!initialRoster) {
-            // No saved roster → any pick means change
-            return roster?.some(s => s.player);
-        }
-
+        if (!initialRoster) return roster?.some(s => s.player);
         const current = normalizeRoster(roster);
         const initial = normalizeRoster(initialRoster);
-
         return JSON.stringify(current) !== JSON.stringify(initial);
     }, [roster, initialRoster]);
 
@@ -81,9 +75,7 @@ const BuildTeam: React.FC = () => {
     const teamCounts = useMemo(() => {
         const map: Record<string, number> = {};
         roster?.forEach(s => {
-            if (s.player) {
-                map[s.player.team] = (map[s.player.team] || 0) + 1;
-            }
+            if (s.player) map[s.player.team] = (map[s.player.team] || 0) + 1;
         });
         return map;
     }, [roster]);
@@ -93,13 +85,8 @@ const BuildTeam: React.FC = () => {
         return config ? config.maxPlayersPerTeam : 1;
     }, [round]);
 
-    const onSelect = (p: Player | null) => {
-        dispatch(placePlayerAuto({player: p}) as any);
-    };
-
-    const onRemove = (slotId: string) => {
-        dispatch(removePlayerFromSlot({slotId}));
-    };
+    const onSelect = (p: Player | null) => dispatch(placePlayerAuto({player: p}) as any);
+    const onRemove = (slotId: string) => dispatch(removePlayerFromSlot({slotId}));
 
     const onSubmit = () => {
         const payload: PostTeamPayload = {
@@ -120,27 +107,32 @@ const BuildTeam: React.FC = () => {
             saved: true,
         };
 
-        setLoadingSavedPicks(true)
+        setLoadingSavedPicks(true);
         postTeam(payload)
             .then(data => {
-                if (data.status === 200) {
-                    setSuccessModalOpen(true);
-                } else {
-                    enqueueSnackbar(`${data.message}`, data.variant)
-                }
+                if (data.status === 200) setSuccessModalOpen(true);
+                else enqueueSnackbar(`${data.message}`, data.variant);
             })
-            .finally(() => {
-                setLoadingSavedPicks(false)
-            })
+            .finally(() => setLoadingSavedPicks(false));
     };
 
-    const allSlotsFilled = useMemo(() => {
-        return roster?.every(slot => !!slot.player);
-    }, [roster]);
+    const allSlotsFilled = useMemo(() => roster?.every(slot => !!slot.player), [roster]);
+    const hasAnyPick = useMemo(() => roster?.some(slot => !!slot.player), [roster]);
 
-    const hasAnyPick = useMemo(() => {
-        return roster?.some(slot => !!slot.player);
-    }, [roster]);
+    if (gameStatus === 'Locked') {
+        return (
+            <Container maxWidth="lg" sx={{py: 4}}>
+                <Alert severity="warning">
+                    Round is locked. Please visit your{' '}
+                    <a href="/shoeper-bowl/profile" style={{ textDecoration: 'underline', color: 'inherit' }}>
+                        profile page
+                    </a>{' '}
+                    to view your picks.
+                </Alert>
+            </Container>
+        );
+    }
+
 
     return (
         <>
@@ -153,9 +145,7 @@ const BuildTeam: React.FC = () => {
 
                 <Box sx={{mb: 3}}>
                     <PlayerAutoComplete
-                        selectedPlayers={roster
-                            ?.filter(s => s.player)
-                            ?.map(s => s.player!)}
+                        selectedPlayers={roster?.filter(s => s.player)?.map(s => s.player!)}
                         onSelect={onSelect}
                     />
                     {loading && <Typography variant="caption">Loading players...</Typography>}
@@ -186,7 +176,6 @@ const BuildTeam: React.FC = () => {
                         Reset Roster
                     </Button>
                 </Box>
-
 
                 <Box>
                     <Alert severity="info">

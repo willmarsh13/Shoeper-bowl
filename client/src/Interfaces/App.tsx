@@ -11,7 +11,7 @@ export interface page {
     name: string,
     link: string,
     routerLink: string,
-    element:  React.JSX.Element,
+    element: React.JSX.Element,
     isIndex: boolean | undefined,
     showOnHeader: boolean | undefined,
     showInNavBar: boolean | undefined,
@@ -20,6 +20,7 @@ export interface page {
 export interface GameInfo {
     round: RoundType,
     teams: string[],
+    status: 'Active' | 'Locked' | 'Inactive' | null,
 }
 
 export interface Filters {

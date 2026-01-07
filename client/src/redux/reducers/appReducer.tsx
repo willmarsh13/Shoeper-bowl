@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {Filters, GameInfo, ThemeState} from "../../Interfaces/App";
 import {PlayoffRound} from "../../pages/BuildTeam/logic/roundRules";
 import {Position} from "../../Interfaces/Player";
@@ -10,6 +10,7 @@ const initialThemeState: ThemeState = {
 const initialGameInfoState: GameInfo = {
     round: 'WILD_CARD',
     teams: [],
+    status: 'Locked'
 }
 
 const initialFiltersState: Filters = {
@@ -56,6 +57,6 @@ export const filtersSlice = createSlice({
     },
 });
 
-export const { setMode, toggleMode } = themeSlice.actions;
-export const { setRound, setTeams } = gameInfoSlice.actions;
-export const { setTeamFilters, setPositionFilters } = filtersSlice.actions;
+export const {setMode, toggleMode} = themeSlice.actions;
+export const {setRound, setTeams} = gameInfoSlice.actions;
+export const {setTeamFilters, setPositionFilters} = filtersSlice.actions;
