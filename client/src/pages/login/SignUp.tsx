@@ -71,7 +71,8 @@ export default function SignUp() {
                 sx={{backgroundColor: '#131e36'}}
             >
                 <Paper elevation={24} sx={{minWidth: '50%', padding: 5}}>
-                    <Typography textAlign='center' variant="h4">{`Sign up to access WHALE`}</Typography>
+                    <Typography textAlign='center'
+                                variant="h4">{`Sign up to access the Shoeper-Bowl Portal`}</Typography>
                     <Divider sx={{marginY: 3}}>User Information</Divider>
                     <form onSubmit={handleSubmit}>
                         <Grid container justifyContent='center' spacing={3}>
