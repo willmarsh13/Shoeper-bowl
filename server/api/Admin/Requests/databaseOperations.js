@@ -1,5 +1,5 @@
 const client = require('../../MongoClient');
-const {checkLogin, checkAdmin, sendSignupApprovedEmail} = require("../../Auth/authorization");
+const {checkAdmin, sendSignupApprovedEmail} = require("../../Auth/authorization");
 
 async function getRequests(req, res) {
 

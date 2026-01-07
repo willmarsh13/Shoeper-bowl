@@ -17,7 +17,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DoDisturbOnOutlinedIcon from '@mui/icons-material/DoDisturbOnOutlined';
 import DoDisturbOnIcon from '@mui/icons-material/DoDisturbOn';
 import SearchIcon from "@mui/icons-material/Search";
-import React, {useEffect, useState, FormEvent, ChangeEvent} from "react";
+import React, {useEffect, useState, FormEvent} from "react";
 import {getRequests} from "../logic/getRequests";
 import {UpdateRequest} from "../logic/updateRequest";
 import {enqueueSnackbar} from "notistack";
@@ -143,9 +143,18 @@ export default function AccountReqs() {
                     <Typography>No Pending Accounts</Typography>
                 )}
                 <Collapse in={requestsVisible}>
-                    {displayedRequests?.map((request) => (
-                        <ApprovalPaper key={request.id} request={request}/>
-                    ))}
+                    <Box
+                        sx={{
+                            maxHeight: 400,
+                            overflowY: 'auto',
+                            mt: 1,
+                            pr: 1, // prevents scrollbar overlap
+                        }}
+                    >
+                        {displayedRequests?.map((request) => (
+                            <ApprovalPaper key={request.id} request={request}/>
+                        ))}
+                    </Box>
                 </Collapse>
             </Stack>
         </Paper>
