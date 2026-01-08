@@ -15,7 +15,8 @@ import {
     Icon,
     Stack,
     Divider,
-    Tooltip
+    Tooltip,
+    Button
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -25,6 +26,9 @@ import {getURL} from "../../../Shared/getURL";
 import dayjs from "dayjs";
 import {PlayoffRound, ROUND_CONFIG, RoundConfig} from "../../BuildTeam/logic/roundRules";
 import {RosterSlot} from "../../../redux/rosterSlice";
+import {useSelector} from "react-redux";
+import {RootState} from "../../../redux/store";
+import {exportPicksToExcel} from "../logic/exportPicksToExcel";
 
 /* =====================
    Types
@@ -40,7 +44,7 @@ interface UserPick {
     timestamp: string
 }
 
-interface AccountRequest {
+export interface AccountRequest {
     Email: string;
     firstName: string;
     lastName: string;
@@ -128,6 +132,57 @@ function AccountRow({row}: { row: AccountRequest }) {
     );
 }
 
+function exportPicksToCSV(
+    accounts: AccountRequest[],
+    roundConfig?: RoundConfig
+) {
+    if (!roundConfig) return;
+
+    // Positions across the X-axis
+    const positions = roundConfig.allowedPositions;
+
+    const headers = [
+        "Name",
+        "Email",
+        ...positions
+    ];
+
+    const rows = accounts.map(account => {
+        const pickMap: Record<string, string> = {};
+
+        const roster = account.picks?.[0]?.roster ?? [];
+
+        roster.forEach(pick => {
+            if (pick.position && pick.player?.full_name) {
+                pickMap[pick.position] = pick.player.full_name;
+            }
+        });
+
+        return [
+            `${account.firstName} ${account.lastName}`,
+            account.Email,
+            ...positions.map(pos => pickMap[pos] ?? "")
+        ];
+    });
+
+    const csv = [
+        headers.join(","),
+        ...rows.map(row =>
+            row.map(val => `"${val.replace(/"/g, '""')}"`).join(",")
+        )
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `shoeper-bowl-picks-${dayjs().format("YYYY-MM-DD")}.csv`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
+
 /* =====================
    Main Component
 ===================== */
@@ -174,9 +229,26 @@ export default function Accounts() {
 
     return (
         <TableContainer component={Paper}>
-            <Stack pt={3} pb={1} textAlign='center' direction='row' justifyContent='center' spacing={1}>
+            <Stack
+                pt={3}
+                pb={1}
+                textAlign="center"
+                direction="row"
+                justifyContent="center"
+                spacing={2}
+            >
                 <Typography variant="h4">Account Status</Typography>
+
+                <Tooltip title="Export picks as Excel">
+                    <Button
+                        variant="outlined"
+                        onClick={() => exportPicksToExcel(data, round)}
+                    >
+                        Export Picks (Excel)
+                    </Button>
+                </Tooltip>
             </Stack>
+
             <Divider variant='fullWidth'/>
 
             <Table size="small">
