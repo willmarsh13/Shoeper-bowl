@@ -77,7 +77,7 @@ async function checkLogin(req) {
             const user = await checkToken(secureTokenMfa);
             if (user === null) {
                 return {
-                    status: 400,
+                    status: 401,
                     message: "Token expired"
                 };
             } else {
@@ -207,7 +207,7 @@ async function updatePassword(req) {
 
     if (resp?.acknowledged && resp?.modifiedCount === 0) {
         return {
-            status: 401,
+            status: 400,
             message: "User not found."
         };
     }

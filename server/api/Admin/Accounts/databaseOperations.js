@@ -9,7 +9,7 @@ async function getAccounts(req, res) {
 
         if (Role !== 'Admin' && Role !== 'admin') {
             return {
-                status: 400,
+                status: 401,
                 message: 'User is not authorized to view accounts.',
                 variant: 'error',
                 count: 0,

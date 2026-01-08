@@ -49,7 +49,7 @@ async function updateRequest(req, res) {
 
     if (Role !== 'Admin' && Role !== 'admin') {
         return {
-            status: 400,
+            status: 403,
             message: `User is not authorized to approve/reject users.`,
             variant: 'error',
         }

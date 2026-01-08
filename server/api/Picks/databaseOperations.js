@@ -126,7 +126,7 @@ async function postPicks(req) {
 
         if (teamCounts[team] > roundConfig.maxPlayersPerTeam) {
             return {
-                message: `Too many players selected from team ${team}`,
+                message: `Too many players selected from ${team}`,
                 status: 400,
                 variant: 'error',
             };

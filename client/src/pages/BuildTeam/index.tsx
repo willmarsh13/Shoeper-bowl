@@ -12,7 +12,7 @@ import {
     setRosterFromApi,
     RosterSlot,
 } from '../../redux/rosterSlice';
-import {Container, Box, Typography, Button, Alert, Tooltip} from '@mui/material';
+import {Container, Box, Typography, Button, Alert, Tooltip, Stack, IconButton} from '@mui/material';
 import {Player} from '../../Interfaces/Player';
 import {PlayoffRound, ROUND_CONFIG} from "./logic/roundRules";
 import {Filters} from "./components/Filters";
@@ -22,10 +22,13 @@ import BuildConfirmedDialog from "./components/BuildConfirmed";
 import postTeam, {PostTeamPayload} from "./logic/postTeam";
 import {enqueueSnackbar} from "notistack";
 import getTeam from "./logic/getTeam";
+import InfoIcon from '@mui/icons-material/Info';
+import RulesModal from "./components/RuleModal";
 
 const BuildTeam: React.FC = () => {
     const [successModalOpen, setSuccessModalOpen] = useState(false);
     const [loadingSavePicks, setLoadingSavedPicks] = useState<boolean>(false);
+    const [rulesModalOpen, setRulesModalOpen] = useState<boolean>(false);
     const [initialRoster, setInitialRoster] = useState<RosterSlot[] | null>(null);
     const [gameStatus, setGameStatus] = useState<'Active' | 'Locked' | 'Inactive' | null>('Locked');
 
@@ -111,7 +114,7 @@ const BuildTeam: React.FC = () => {
         postTeam(payload)
             .then(data => {
                 if (data.status === 200) setSuccessModalOpen(true);
-                else enqueueSnackbar(`${data.message}`, data.variant);
+                else enqueueSnackbar(`${data.message}`, {variant: data.variant});
             })
             .finally(() => setLoadingSavedPicks(false));
     };
@@ -124,7 +127,7 @@ const BuildTeam: React.FC = () => {
             <Container maxWidth="lg" sx={{py: 4}}>
                 <Alert severity="warning">
                     Round is locked. Please visit your{' '}
-                    <a href="/shoeper-bowl/profile" style={{ textDecoration: 'underline', color: 'inherit' }}>
+                    <a href="/shoeper-bowl/profile" style={{textDecoration: 'underline', color: 'inherit'}}>
                         profile page
                     </a>{' '}
                     to view your picks.
@@ -137,7 +140,16 @@ const BuildTeam: React.FC = () => {
     return (
         <>
             <Container maxWidth="lg" sx={{py: 4}}>
-                <Typography variant="h4" gutterBottom>Fantasy Post-Season Roster Builder</Typography>
+                <Stack direction='row' justifyContent='space-between'>
+                    <Typography variant="h4" gutterBottom>Fantasy Post-Season Roster Builder</Typography>
+                    <Box>
+                        <Tooltip title="Game Info & Rules">
+                            <IconButton color='primary' onClick={() => setRulesModalOpen(!rulesModalOpen)}>
+                                <InfoIcon/>
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
+                </Stack>
 
                 <Box sx={{mb: 3}}>
                     <Filters/>
@@ -185,6 +197,8 @@ const BuildTeam: React.FC = () => {
             </Container>
 
             <BuildConfirmedDialog open={successModalOpen} handleClose={() => null}/>
+
+            <RulesModal open={rulesModalOpen} onClose={(newVal) => setRulesModalOpen(newVal)}/>
         </>
     );
 };
