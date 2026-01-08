@@ -9,7 +9,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Container from '@mui/material/Container';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
-import AdbIcon from '@mui/icons-material/Adb';
+import SportsFootballIcon from '@mui/icons-material/SportsFootball';
 import {pages} from "../../App";
 import {AccountInfo, Setting} from "../../Interfaces/App";
 import {Avatar, Tooltip} from "@mui/material";
@@ -45,7 +45,7 @@ export default function Header({settings, userInfo}: HeaderProps) {
         <AppBar position="static">
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
-                    <AdbIcon sx={{display: {xs: 'none', md: 'flex'}, mr: 1}}/>
+                    <SportsFootballIcon sx={{display: {xs: 'none', md: 'flex'}, mr: 1}}/>
                     <Typography
                         variant="h6"
                         noWrap
