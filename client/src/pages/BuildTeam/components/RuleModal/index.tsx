@@ -25,8 +25,8 @@ export default function RulesModal({ open, onClose }: RulesModalProps) {
 
     const imageSrc =
         tab === 'game'
-            ? '/shoeper-bowl/assets/GameInfo/Rules.png'
-            : '/shoeper-bowl/assets/GameInfo/scoring.png';
+            ? '/shoeper-bowl/assets/gameInfo/rules.png'
+            : '/shoeper-bowl/assets/gameInfo/scoring.png';
 
     return (
         <Modal
