@@ -89,9 +89,9 @@ app.use('/shoeper-bowl/api', async (req, res, next) => {
     }
 }, require('./api'));
 
-app.get("/shoeper-bowl/assets", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
-});
+// app.get("/shoeper-bowl/assets", (req, res) => {
+//     res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
+// });
 
 app.get(/.*/, async (req, res, next) => {
     try {
