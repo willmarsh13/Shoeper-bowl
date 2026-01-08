@@ -16,7 +16,8 @@ import {
     Stack,
     Divider,
     Tooltip,
-    Button
+    Button,
+    TableSortLabel
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -26,8 +27,6 @@ import {getURL} from "../../../Shared/getURL";
 import dayjs from "dayjs";
 import {PlayoffRound, ROUND_CONFIG, RoundConfig} from "../../BuildTeam/logic/roundRules";
 import {RosterSlot} from "../../../redux/rosterSlice";
-import {useSelector} from "react-redux";
-import {RootState} from "../../../redux/store";
 import {exportPicksToExcel} from "../logic/exportPicksToExcel";
 
 /* =====================
@@ -132,66 +131,20 @@ function AccountRow({row}: { row: AccountRequest }) {
     );
 }
 
-function exportPicksToCSV(
-    accounts: AccountRequest[],
-    roundConfig?: RoundConfig
-) {
-    if (!roundConfig) return;
-
-    // Positions across the X-axis
-    const positions = roundConfig.allowedPositions;
-
-    const headers = [
-        "Name",
-        "Email",
-        ...positions
-    ];
-
-    const rows = accounts.map(account => {
-        const pickMap: Record<string, string> = {};
-
-        const roster = account.picks?.[0]?.roster ?? [];
-
-        roster.forEach(pick => {
-            if (pick.position && pick.player?.full_name) {
-                pickMap[pick.position] = pick.player.full_name;
-            }
-        });
-
-        return [
-            `${account.firstName} ${account.lastName}`,
-            account.Email,
-            ...positions.map(pos => pickMap[pos] ?? "")
-        ];
-    });
-
-    const csv = [
-        headers.join(","),
-        ...rows.map(row =>
-            row.map(val => `"${val.replace(/"/g, '""')}"`).join(",")
-        )
-    ].join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `shoeper-bowl-picks-${dayjs().format("YYYY-MM-DD")}.csv`;
-    a.click();
-
-    URL.revokeObjectURL(url);
-}
-
 /* =====================
    Main Component
 ===================== */
+
+type SortOrder = 'asc' | 'desc';
 
 export default function Accounts() {
     const [data, setData] = useState<AccountRequest[]>([]);
     const [round, setRound] = useState<RoundConfig>();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const [sortBy, setSortBy] = useState<'picks' | 'created'>('picks');
+    const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
     useEffect(() => {
         const fetchAccounts = async () => {
@@ -217,6 +170,25 @@ export default function Accounts() {
         fetchAccounts();
     }, []);
 
+    // Sorted data
+    const sortedData = [...data].sort((a, b) => {
+        if (sortBy === 'picks') {
+            const aVal = a.hasPicks ? 1 : 0;
+            const bVal = b.hasPicks ? 1 : 0;
+            if (aVal !== bVal) return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+            // tie-breaker: requested at descending
+            return new Date(b.created).getTime() - new Date(a.created).getTime();
+        }
+
+        if (sortBy === 'created') {
+            const aTime = new Date(a.created).getTime();
+            const bTime = new Date(b.created).getTime();
+            return sortOrder === 'asc' ? aTime - bTime : bTime - aTime;
+        }
+
+        return 0;
+    });
+
     if (loading) return (
         <Box display="flex" justifyContent="center" mt={4}>
             <CircularProgress/>
@@ -228,47 +200,81 @@ export default function Accounts() {
     );
 
     return (
-        <TableContainer component={Paper}>
-            <Stack
-                pt={3}
-                pb={1}
-                textAlign="center"
-                direction="row"
-                justifyContent="center"
-                spacing={2}
-            >
-                <Typography variant="h4">Account Status</Typography>
+        <Paper>
+            <Stack spacing={2} pt={3} pb={1} textAlign="center">
+                <Box display="flex" justifyContent="space-between" alignItems="center" sx={{paddingX: 2}}>
+                    <Typography variant="h4">Account Status</Typography>
 
-                <Tooltip title="Export picks as Excel">
-                    <Button
-                        variant="outlined"
-                        onClick={() => exportPicksToExcel(data, round)}
-                    >
-                        Export Picks (Excel)
-                    </Button>
-                </Tooltip>
+                    <Tooltip title="Export picks as Excel">
+                        <Button
+                            size='small'
+                            variant="outlined"
+                            onClick={() => exportPicksToExcel(data, round)}
+                        >
+                            Export
+                        </Button>
+                    </Tooltip>
+                </Box>
+
+                {/* Scrollable Table */}
+                <TableContainer
+                    component={Paper}
+                    sx={{
+                        maxHeight: 600,      // vertical scroll
+                        overflowX: "auto",   // horizontal scroll
+                        overflowY: "auto",
+                    }}
+                >
+                    <Table stickyHeader size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell/>
+                                <TableCell>First Name</TableCell>
+                                <TableCell>Last Name</TableCell>
+                                <TableCell>Email</TableCell>
+                                <TableCell>
+                                    <TableSortLabel
+                                        active={sortBy === 'created'}
+                                        direction={sortOrder}
+                                        onClick={() => {
+                                            if (sortBy === 'created') {
+                                                setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+                                            } else {
+                                                setSortBy('created');
+                                                setSortOrder('desc');
+                                            }
+                                        }}
+                                    >
+                                        Requested At
+                                    </TableSortLabel>
+                                </TableCell>
+                                <TableCell>
+                                    <TableSortLabel
+                                        active={sortBy === 'picks'}
+                                        direction={sortOrder}
+                                        onClick={() => {
+                                            if (sortBy === 'picks') {
+                                                setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+                                            } else {
+                                                setSortBy('picks');
+                                                setSortOrder('desc');
+                                            }
+                                        }}
+                                    >
+                                        {`${round?.displayName} Picks`}
+                                    </TableSortLabel>
+                                </TableCell>
+                            </TableRow>
+                        </TableHead>
+
+                        <TableBody>
+                            {sortedData.map((row) => (
+                                <AccountRow key={row.Email} row={row}/>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
             </Stack>
-
-            <Divider variant='fullWidth'/>
-
-            <Table size="small">
-                <TableHead>
-                    <TableRow>
-                        <TableCell/>
-                        <TableCell>First Name</TableCell>
-                        <TableCell>Last Name</TableCell>
-                        <TableCell>Email</TableCell>
-                        <TableCell>Requested At</TableCell>
-                        <TableCell>{`${round?.displayName} Picks`}</TableCell>
-                    </TableRow>
-                </TableHead>
-
-                <TableBody>
-                    {data.map((row) => (
-                        <AccountRow key={row.Email} row={row}/>
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+        </Paper>
     );
 }
