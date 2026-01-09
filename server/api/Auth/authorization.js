@@ -4,6 +4,10 @@ const bcrypt = require('bcryptjs');
 
 const {SendEmail} = require("../services/emailService");
 
+function normalizeEmail(email) {
+    return email?.trim().toLowerCase();
+}
+
 function generatePasswordResetToken() {
     const token = crypto.randomBytes(32).toString("hex");
 
@@ -103,7 +107,7 @@ async function checkLogin(req) {
 async function SignUserIn(req, res) {
     const COOKIE_EXPIRY_HOURS = 24
     // Sign user in
-    let username = req.body?.username;
+    let username = normalizeEmail(req.body?.username);
     let password = req.body?.password;
 
     // Missing data
@@ -185,7 +189,7 @@ async function SignUserIn(req, res) {
 }
 
 async function updatePassword(req) {
-    let username = req.body.username;
+    let username = normalizeEmail(req.body?.username);
     let password = req.body.password;
 
     await client.connect();
@@ -223,7 +227,7 @@ async function getUserInfo(req) {
     const userResp = await checkLogin(req)
 
     if (userResp && userResp.user && userResp.user.Email) {
-        const userFilter = {Email: userResp.user.Email}
+        const userFilter = {Email: normalizeEmail(userResp.user.Email)}
 
         const userCollection = client.db('Authorization').collection('Users');
         return await userCollection.findOne(userFilter)
@@ -234,7 +238,7 @@ async function getUserInfo(req) {
 
 async function signUp(req) {
 
-    const email = req.body.username;
+    const email = normalizeEmail(req.body.username);
     const password = req.body.password;
 
     const firstName = req.body.firstName;
@@ -309,8 +313,7 @@ async function signUp(req) {
 }
 
 async function requestPasswordReset(req) {
-    const email = req.body.email;
-
+    const email = normalizeEmail(req.body.email);
     if (!email || typeof email !== "string") {
         return {
             status: 200,
@@ -388,12 +391,12 @@ async function resetPasswordWithToken(req) {
     }
 
     await userCollection.updateOne(
-        { Email: resetRequest.Email },
+        { Email: normalizeEmail(resetRequest.Email)},
         { $set: { PasswordHash: await bcrypt.hash(newPassword, 12) } }
     );
 
     // Invalidate all sessions
-    await sessionCollection.deleteMany({ Email: resetRequest.Email });
+    await sessionCollection.deleteMany({ Email: normalizeEmail(resetRequest.Email) });
 
     // Mark token as used
     await resetCollection.updateOne(
@@ -417,7 +420,7 @@ async function sendSignupApprovalEmail({
     return SendEmail({
         toEmails: [
             "willmarsh13@gmail.com",
-            // "prestonshoe21@gmail.com",
+            "prestonshoe21@gmail.com",
         ],
         subject: "New Shoeper-bowl Signup Pending Approval",
         body: `
@@ -462,4 +465,5 @@ module.exports = {
     sendSignupApprovedEmail,
     requestPasswordReset,
     resetPasswordWithToken,
+    normalizeEmail,
 };

@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import {filtersSlice, gameInfoSlice, themeSlice} from './reducers/appReducer';
+import {appSlice, filtersSlice, gameInfoSlice, themeSlice} from './reducers/appReducer';
 import playersReducer from './playersSlice';
 import rosterReducer from './rosterSlice';
 
@@ -10,6 +10,7 @@ export const store = configureStore({
         roster: rosterReducer,
         gameInfo: gameInfoSlice.reducer,
         filters: filtersSlice.reducer,
+        app: appSlice.reducer,
     },
 });
 

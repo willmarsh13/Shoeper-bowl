@@ -14,6 +14,12 @@ import Profile from "./pages/Profile";
 import checkUnauthorized from "./Shared/handleCheckUnauth";
 import ForgotPassword from "./pages/login/ForgotPassword";
 import ResetPassword from "./pages/login/ResetPassword";
+import ScoringAdmin from "./pages/Admin/pages/ScoringAdmin";
+import AccountReqs from "./pages/Admin/components/AccountReqs";
+import Accounts from "./pages/Admin/components/Accounts";
+import {useSelector} from "react-redux";
+import {RootState} from "./redux/store";
+import {Box} from "@mui/material";
 
 export const pages: page[] = [
     {
@@ -45,6 +51,24 @@ export const pages: page[] = [
         isIndex: false,
         showOnHeader: false,
         showInNavBar: false,
+        childRoutes: [
+            {
+                path: '',
+                element: <AccountReqs/>,
+            },
+            {
+                path: 'Scoring',
+                element: <ScoringAdmin/>,
+            },
+            {
+                path: 'AccountRequests',
+                element: <AccountReqs/>,
+            },
+            {
+                path: 'Accounts',
+                element: <Accounts/>,
+            }
+        ]
     },
     {
         id: 3,
@@ -99,9 +123,11 @@ export const pages: page[] = [
 ];
 
 export default function App() {
+    const headerHeight = useSelector((state: RootState) => state.app.headerHeight)
+
     const [settings, setSettings] = useState([]);
     const [userInfo, setUserInfo] = useState({
-        email: '',
+        Email: '',
         role: '',
         firstName: '',
         lastName: '',
@@ -127,11 +153,25 @@ export default function App() {
         <>
             <BrowserRouter basename="/shoeper-bowl">
                 {!allowedPages.includes(window.location.pathname) && <Header settings={settings} userInfo={userInfo}/>}
-                <Routes>
-                    {pages?.map(({id, routerLink, isIndex, element}) => (
-                        <Route key={id} index={isIndex} path={routerLink} element={element}/>
-                    ))}
-                </Routes>
+                <Box sx={{height: `calc(100% - ${headerHeight}px)`, overflowY: 'auto'}}>
+                    <Routes>
+                        {pages.map(({id, routerLink, isIndex, element, childRoutes}) => {
+                            if (isIndex) {
+                                return (
+                                    <Route key={id} index element={element}/>
+                                );
+                            }
+
+                            return (
+                                <Route key={id} path={routerLink} element={element}>
+                                    {childRoutes?.map(child => (
+                                        <Route key={child.path} path={child.path} element={child.element}/>
+                                    ))}
+                                </Route>
+                            );
+                        })}
+                    </Routes>
+                </Box>
             </BrowserRouter>
         </>
     );

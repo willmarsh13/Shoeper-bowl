@@ -14,6 +14,9 @@ import {pages} from "../../App";
 import {AccountInfo, Setting} from "../../Interfaces/App";
 import {Avatar, Tooltip} from "@mui/material";
 import logout from "../logout";
+import {useDispatch} from "react-redux";
+import {useEffect} from "react";
+import {setHeaderHeight} from "../../redux/reducers/appReducer";
 
 
 interface HeaderProps {
@@ -24,6 +27,28 @@ interface HeaderProps {
 export default function Header({settings, userInfo}: HeaderProps) {
     const [profileAnchor, setProfileAnchor] = React.useState<null | HTMLElement>(null);
     const [profileOpen, setProfileOpen] = React.useState<null | HTMLElement>(null);
+    const headerRef = React.useRef<HTMLDivElement>(null);
+    const dispatch = useDispatch()
+
+    useEffect(() => {
+        if (!headerRef.current) return;
+
+        const updateHeight = () => {
+            dispatch(setHeaderHeight(headerRef.current!.offsetHeight));
+        };
+
+        // Initial height
+        updateHeight();
+
+        // Observe changes in size
+        const observer = new ResizeObserver(() => {
+            updateHeight();
+        });
+
+        observer.observe(headerRef.current);
+
+        return () => observer.disconnect();
+    }, [headerRef, dispatch]);
 
     const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
         setProfileAnchor(event.currentTarget);
@@ -42,7 +67,7 @@ export default function Header({settings, userInfo}: HeaderProps) {
     };
 
     return (
-        <AppBar position="static">
+        <AppBar position="static" ref={headerRef}>
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
                     <SportsFootballIcon sx={{display: {xs: 'none', md: 'flex'}, mr: 1}}/>

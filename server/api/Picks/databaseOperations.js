@@ -1,5 +1,5 @@
 const client = require("../MongoClient");
-const { checkAdmin } = require("../Auth/authorization");
+const { checkAdmin} = require("../Auth/authorization");
 const { ROUND_CONFIG } = require("../logic/roundRules"); // mirror of frontend config
 const { getGameInfo } = require('../Game/databaseOperations');
 
@@ -157,10 +157,10 @@ async function postPicks(req) {
     const userPicksCollection = client.db('FantasyFootball').collection('UserPicks');
 
     await userPicksCollection.updateOne(
-        { email: Email, round: round },
+        { email: (Email), round: round },
         {
             $set: {
-                email: Email,
+                email: (Email),
                 firstName,
                 lastName,
                 roster,
@@ -180,13 +180,13 @@ async function postPicks(req) {
 }
 
 async function getPicks(req) {
-    const { Email } = await checkAdmin(req);
+    const { Email } = await checkAdmin(req) ?? {};
 
     await client.connect();
     const { round: currentRound } = await getGameInfo(req);
     const userPicksCollection = client.db('FantasyFootball').collection('UserPicks');
 
-    const results = await userPicksCollection.findOne({ email: Email, round: currentRound });
+    const results = await userPicksCollection.findOne({ email: (Email), round: currentRound });
 
     return {
         roster: results?.roster,

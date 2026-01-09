@@ -7,7 +7,7 @@ router
     .route("/")
     .get(async (req, res) => {
         let settings = []
-        let userInfo = await checkAdmin(req, res)
+        let userInfo = await checkAdmin(req)
 
         if (userInfo?.Role === "Admin") {
             settings = [

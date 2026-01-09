@@ -6,7 +6,7 @@ export interface RequestUser {
     id: string;          // or whatever fields you need
     firstName: string;
     lastName: string;
-    email: string;
+    Email: string;
     // add any other fields used by the API
 }
 

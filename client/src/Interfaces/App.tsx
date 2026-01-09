@@ -6,6 +6,16 @@ export interface ThemeState {
     mode: 'light' | 'dark';
 }
 
+export interface AppState {
+    headerHeight: number,
+    footerHeight: number,
+}
+
+export interface subPage {
+    path: string,
+    element: React.JSX.Element,
+}
+
 export interface page {
     id: number,
     name: string,
@@ -15,6 +25,7 @@ export interface page {
     isIndex: boolean | undefined,
     showOnHeader: boolean | undefined,
     showInNavBar: boolean | undefined,
+    childRoutes?: subPage[],
 }
 
 export interface GameInfo {
@@ -34,7 +45,7 @@ export interface Setting {
 }
 
 export interface AccountInfo {
-    email: string,
+    Email: string,
     role: string,
     firstName: string,
     lastName: string,

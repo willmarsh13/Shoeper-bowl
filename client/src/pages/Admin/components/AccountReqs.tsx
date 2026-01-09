@@ -27,7 +27,7 @@ interface Request {
     id: string;
     firstName: string;
     lastName: string;
-    email: string;
+    Email: string;
     deviceName?: string;
 }
 
@@ -71,7 +71,7 @@ export default function AccountReqs() {
                     (
                         (user.firstName?.toLowerCase().includes(searchKey)) ||
                         (user.lastName?.toLowerCase().includes(searchKey)) ||
-                        (user.email?.toLowerCase().includes(searchKey))
+                        (user.Email?.toLowerCase().includes(searchKey))
                     )
                 )
             );
@@ -90,7 +90,7 @@ export default function AccountReqs() {
             setDisplayedRequests(requests.filter(user =>
                 user.firstName.toLowerCase().includes(searchKey) ||
                 user.lastName.toLowerCase().includes(searchKey) ||
-                user.email.toLowerCase().includes(searchKey)
+                user.Email.toLowerCase().includes(searchKey)
             ));
         }
     };
@@ -182,9 +182,14 @@ const ApprovalPaper: React.FC<ApprovalPaperProps> = ({request}) => {
     return (
         <Paper elevation={3} sx={{paddingX: 2, paddingY: 0.75, marginY: 1}}>
             <Stack direction='row' spacing={2} alignContent='center'>
-                <Typography textAlign='left' flexGrow={1}>
-                    {request.firstName} {request.lastName}
-                </Typography>
+                <Box  flexGrow={1}>
+                    <Typography textAlign='left'>
+                        {request.firstName} {request.lastName}
+                    </Typography>
+                    <Typography textAlign='left'>
+                        {request.Email}
+                    </Typography>
+                </Box>
                 <Box>
                     <IconButton color='success' onClick={() => handleUpdateReq(request, true)}>
                         {optionSelected === 'Approved' ? <CheckCircleIcon/> : <CheckCircleOutlineIcon/>}
