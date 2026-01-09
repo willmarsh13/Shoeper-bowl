@@ -2,6 +2,15 @@ const {getPlayers} = require("../services/playerService");
 const {getGameInfo} = require("../Game/databaseOperations");
 const POSITION_ORDER = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'];
 
+/**
+ * Players to exclude regardless of search/filtering.
+ * Matching is case-insensitive.
+ */
+const PLAYER_EXCLUDE_OVERRIDES = new Set([
+    'michael|badgley|k|buf',
+]);
+
+
 const positionRank = (pos) => {
     const idx = POSITION_ORDER.indexOf(pos);
     return idx === -1 ? POSITION_ORDER.length : idx;
@@ -75,9 +84,18 @@ async function playerSearch(req, res) {
         );
     }
 
+    const buildPlayerKey = (p) =>
+        `${p.firstName}|${p.lastName}|${p.position}|${p.team}`.toLowerCase();
+
     /* ---------- Filtering BEFORE pagination ---------- */
 
     players = players.filter((p) => {
+        // ---------- Override exclusion ----------
+        if (PLAYER_EXCLUDE_OVERRIDES.has(buildPlayerKey(p))) {
+            return false;
+        }
+
+        // ---------- Existing filters ----------
         if (!effectiveTeams.includes(p.team)) return false;
         if (excludedPositions.includes(p.position)) return false;
         if (positionFilter && !positionFilter.includes(p.position)) return false;
