@@ -2,23 +2,47 @@ const client = require('../../MongoClient');
 const {checkAdmin, sendSignupApprovedEmail} = require("../../Auth/authorization");
 
 async function getRequests(req, res) {
+    const requestCollection = (await client.connect())
+        .db('Authorization')
+        .collection('Requests');
 
-    const requestCollection = (await client.connect()).db('Authorization').collection('Requests');
-
-    const results = await requestCollection.find(
-        {status: 'submitted'},
-        {projection: {_id: 0}}
-    ).toArray()
-
-    const sortedResults = await results.sort((a, b) => a.toLowerCase() - b.toLowerCase())
+    const results = await requestCollection.aggregate([
+        {
+            $match: {
+                status: { $in: ['submitted'] },
+            },
+        },
+        {
+            $addFields: {
+                statusOrder: {
+                    $cond: [
+                        { $eq: ['$status', 'submitted'] },
+                        0,
+                        1,
+                    ],
+                },
+            },
+        },
+        {
+            $sort: {
+                statusOrder: 1, // submitted first
+                timeStamp: 1,   // older first
+            },
+        },
+        {
+            $project: {
+                _id: 0,
+                statusOrder: 0,
+            },
+        },
+    ]).toArray();
 
     return {
-        message: 'Successfully found sortedResults',
-        count: await sortedResults.length,
-        results: await sortedResults,
+        message: 'Successfully found requests',
+        count: results.length,
+        results,
         status: 200,
-    }
-
+    };
 }
 
 async function updateRequest(req, res) {
