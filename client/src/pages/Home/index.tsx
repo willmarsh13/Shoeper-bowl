@@ -12,40 +12,48 @@ const Home: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: `
-                        radial-gradient(
-                            circle at top,
-                            ${theme.palette.primary.light}22,
-                            ${theme.palette.background.default} 60%
-                        )
-                    `,
+
+                backgroundImage: 'url(/shoeper-bowl/assets/images/CLE_PIT_PRESTON.JPEG)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+
+                // Optional: subtle overlay for text readability
+                position: 'relative',
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                    zIndex: 0,
+                },
             })}
         >
-            <Container maxWidth="sm">
+            <Container maxWidth="sm" sx={{position: 'relative', zIndex: 1}}>
                 <Stack
                     spacing={4}
                     alignItems="center"
                     textAlign="center"
                 >
-                    {/* App Name */}
-                    <Typography
-                        variant="h2"
-                        fontWeight={800}
-                        sx={{letterSpacing: -1}}
-                    >
-                        Shoe-per Bowl
-                    </Typography>
+                    <Stack spacing={0} alignItems='center' textAlign='center'>
+                        {/* App Name */}
+                        <Typography
+                            variant="h2"
+                            fontWeight={800}
+                            sx={{letterSpacing: -1}}
+                        >
+                            Shoe-per Bowl
+                        </Typography>
 
-                    {/* Tagline */}
-                    <Typography
-                        variant="h6"
-                        color="text.secondary"
-                        sx={{maxWidth: 420}}
-                    >
-                        Build your ultimate postseason fantasy roster and
-                        ride it all the way to the championship.
-                    </Typography>
-
+                        {/* Tagline */}
+                        <Typography
+                            variant="h6"
+                            color="text.secondary"
+                            sx={{maxWidth: 420}}
+                        >
+                            Build your ultimate postseason fantasy roster.
+                        </Typography>
+                    </Stack>
                     {/* CTA Buttons */}
                     <Stack spacing={1.5} width="100%" alignItems="center">
                         <Button
