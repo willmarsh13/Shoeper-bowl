@@ -54,7 +54,7 @@ const OverviewPage: React.FC = () => {
                         data.data.picks.flatMap((user: UserPick) => user.roster.map(r => r.slotId))
                     ));
 
-                    const slotOrder = ['QB', 'RB1', 'RB2', 'WR1', 'WR2', 'TE', 'FLEX', 'K', 'DEF'];
+                    const slotOrder = ['QB', 'RB', 'RB2', 'WR', 'WR2', 'TE', 'FLEX', 'K', 'DST'];
                     const sortedSlots = allSlots.sort((a, b) => {
                         const ia: number = slotOrder.indexOf(a) !== -1 ? slotOrder.indexOf(a) : 999;
                         const ib: number = slotOrder.indexOf(b) !== -1 ? slotOrder.indexOf(b) : 999;
