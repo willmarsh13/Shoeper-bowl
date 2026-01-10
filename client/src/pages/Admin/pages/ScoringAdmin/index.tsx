@@ -1,11 +1,11 @@
-import React, {useEffect, useState, useMemo, useRef, useCallback} from 'react';
-import {Box, CircularProgress, Typography, Button} from '@mui/material';
-import {getURL} from "../../../../Shared/getURL";
-import ScoringTabs from "./components/ScoringTabs";
-import {ScoringCategory, STAT_DEFINITIONS} from "./logic/scoringStatDefinitions";
-import ScoringTable from "./components/ScoringTable";
-import checkUnauthorized from "../../../../Shared/handleCheckUnauth";
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { Box, CircularProgress, Typography, Button } from '@mui/material';
+import { getURL } from '../../../../Shared/getURL';
+import ScoringTabs from './components/ScoringTabs';
+import { ScoringCategory, STAT_DEFINITIONS } from './logic/scoringStatDefinitions';
+import checkUnauthorized from '../../../../Shared/handleCheckUnauth';
 import debounce from 'lodash/debounce';
+import { ScoringDataGrid } from './components/ScoringDataGrid';
 
 interface DataInt {
     offense: any[];
@@ -14,15 +14,22 @@ interface DataInt {
 }
 
 export default function ScoringAdmin() {
-    const [data, setData] = useState<DataInt>({offense: [], dst: [], kicker: []});
+    const [data, setData] = useState<DataInt>({ offense: [], dst: [], kicker: [] });
     const [loading, setLoading] = useState(true);
     const [tab, setTab] = useState<ScoringCategory>('offense');
 
     // Holds all table values
     const [values, setValues] = useState<Record<string, Record<string, number>>>({});
-    // Tracks only changed values for autosave
-    const [changedValues, setChangedValues] = useState<Record<string, Record<string, number>>>({});
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [isAutosaving, setIsAutosaving] = useState(false);
     const [saving, setSaving] = useState(false);
+
+    const valuesRef = useRef<Record<string, Record<string, number>>>({});
+    const dirtyRef = useRef<Record<string, Record<string, number>>>({});
+
+    useEffect(() => {
+        valuesRef.current = values;
+    }, [values]);
 
     // Fetch initial data
     useEffect(() => {
@@ -35,15 +42,14 @@ export default function ScoringAdmin() {
                 checkUnauthorized(json.status);
                 setData(json.results);
 
-                // Initialize values with fetched data
+                // Initialize values
                 const initialValues: Record<string, Record<string, number>> = {};
                 Object.keys(json.results).forEach(cat => {
                     json.results[cat].forEach((entity: any) => {
-                        initialValues[entity.entityId] = {...entity.stats};
+                        initialValues[entity.entityId] = { ...entity.stats };
                     });
                 });
                 setValues(initialValues);
-
             } catch (err) {
                 console.error(err);
             } finally {
@@ -54,91 +60,101 @@ export default function ScoringAdmin() {
         fetchScores();
     }, []);
 
+    const getInitialValue = useCallback(
+        (entityId: string, statKey: string) => values[entityId]?.[statKey] ?? 0,
+        [values]
+    );
+
     // Sort entities once on load
     const sortedEntities = useMemo(() => {
         const currentTabData = data?.[tab] ?? [];
         return [...currentTabData].sort((a, b) => {
-            const aMissing = STAT_DEFINITIONS[tab].filter(s => !(values[a.entityId]?.[s.key] ?? 0)).length;
-            const bMissing = STAT_DEFINITIONS[tab].filter(s => !(values[b.entityId]?.[s.key] ?? 0)).length;
+            const aMissing = STAT_DEFINITIONS[tab].filter(s => !(a.stats?.[s.key] ?? 0)).length;
+            const bMissing = STAT_DEFINITIONS[tab].filter(s => !(b.stats?.[s.key] ?? 0)).length;
             return bMissing - aMissing;
         });
-    }, [data, tab, values]);
+    }, [data, tab]);
 
-    // Handle table input changes
-    const handleChange = (entityId: string, statKey: string, value: number) => {
-        setValues(prev => ({
-            ...prev,
-            [entityId]: {...prev[entityId], [statKey]: value},
-        }));
-        setChangedValues(prev => ({
-            ...prev,
-            [entityId]: {...prev[entityId], [statKey]: value},
-        }));
-    };
+    // Handle table changes
+    const handleChange = useCallback((entityId: string, statKey: string, value: number) => {
+        setValues(prev => {
+            const updated = {
+                ...prev,
+                [entityId]: {
+                    ...prev[entityId],
+                    [statKey]: value,
+                },
+            };
+            // Track dirty fields for autosave
+            dirtyRef.current[entityId] = {
+                ...dirtyRef.current[entityId],
+                [statKey]: value,
+            };
+            setHasUnsavedChanges(true);
+            return updated;
+        });
 
-    // Debounced save function
+        debouncedSave();
+    }, []);
+
+
+    // Autosave function
     const saveChanges = useCallback(async () => {
-        if (Object.keys(changedValues).length === 0) return;
+        const changes = dirtyRef.current;
+        if (!Object.keys(changes).length) return;
 
+        setIsAutosaving(true);
         setSaving(true);
+
         try {
-            const payload = {changes: changedValues};
             await fetch(`${getURL()}/api/Admin/Scoring/Update`, {
                 method: 'POST',
                 credentials: 'include',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ changes }),
             });
 
-            // Clear changedValues on successful save
-            setChangedValues({});
-        } catch (err) {
-            console.error('Failed to save scoring changes', err);
+            dirtyRef.current = {};
+            setHasUnsavedChanges(false);
         } finally {
             setSaving(false);
+            setIsAutosaving(false);
         }
-    }, [changedValues]);
+    }, []);
 
-    // Autosave after 5 seconds of inactivity
     const debouncedSave = useRef(debounce(saveChanges, 5000)).current;
-
-    useEffect(() => {
-        if (Object.keys(changedValues).length > 0) {
-            debouncedSave();
-        }
-    }, [changedValues, debouncedSave]);
 
     if (loading) {
         return (
-            <Box height='100%' width='100%' sx={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                <CircularProgress/>
+            <Box height="100%" width="100%" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CircularProgress />
             </Box>
         );
     }
 
     return (
-        <Box sx={{height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0}} pb={2}>
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <Typography variant="h4" gutterBottom>
                 Scoring Admin
             </Typography>
 
-            <ScoringTabs tab={tab} onTabChange={setTab}/>
+            <ScoringTabs tab={tab} onTabChange={setTab} />
 
-            <Box sx={{flex: 1, minHeight: 0, overflow: 'auto'}}>
-                <ScoringTable
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+                <ScoringDataGrid
                     entities={sortedEntities}
                     stats={STAT_DEFINITIONS[tab]}
-                    values={values}
+                    getInitialValue={getInitialValue}
                     onChange={handleChange}
                 />
             </Box>
 
-            <Box sx={{mt: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2}}>
-                {saving && <Typography variant="body2">Saving...</Typography>}
-                <Button variant="contained" color="primary" onClick={saveChanges}
-                        disabled={saving || Object.keys(changedValues).length === 0}>
-                    Save Now
-                </Button>
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2 }}>
+                {hasUnsavedChanges && (
+                    <Button variant="contained" color="primary" disabled={saving} onClick={saveChanges}>
+                        {isAutosaving ? 'Autosaving' : 'Save Now'}
+                    </Button>
+                )}
             </Box>
         </Box>
     );

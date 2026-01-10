@@ -20,6 +20,8 @@ import Accounts from "./pages/Admin/components/Accounts";
 import {useSelector} from "react-redux";
 import {RootState} from "./redux/store";
 import {Box} from "@mui/material";
+import "./Shared/logic/index.css"
+
 
 export const pages: page[] = [
     {
