@@ -13,5 +13,6 @@ router.use('/playerSearch', require('./PlayerSearch'))
 router.use('/game', require('./Game'))
 router.use('/picks', require('./Picks'))
 router.use('/overview', require('./Overview'))
+router.use('/scores', require('./Scores'))
 
 module.exports = router;

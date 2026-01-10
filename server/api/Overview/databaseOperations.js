@@ -1,6 +1,5 @@
 const client = require("../MongoClient");
 const {getGameInfo} = require("../Game/databaseOperations");
-const {ROUND_CONFIG} = require("../logic/roundRules");
 
 async function getOverview(req) {
     await client.connect();

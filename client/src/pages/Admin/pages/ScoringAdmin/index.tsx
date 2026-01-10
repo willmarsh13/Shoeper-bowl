@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
-import { Box, CircularProgress, Typography, Button } from '@mui/material';
-import { getURL } from '../../../../Shared/getURL';
+import React, {useEffect, useState, useMemo, useRef, useCallback} from 'react';
+import {Box, CircularProgress, Typography, Button} from '@mui/material';
+import {getURL} from '../../../../Shared/getURL';
 import ScoringTabs from './components/ScoringTabs';
-import { ScoringCategory, STAT_DEFINITIONS } from './logic/scoringStatDefinitions';
+import {ScoringCategory, STAT_DEFINITIONS} from './logic/scoringStatDefinitions';
 import checkUnauthorized from '../../../../Shared/handleCheckUnauth';
 import debounce from 'lodash/debounce';
-import { ScoringDataGrid } from './components/ScoringDataGrid';
+import {ScoringDataGrid} from './components/ScoringDataGrid';
 
 interface DataInt {
     offense: any[];
@@ -14,7 +14,7 @@ interface DataInt {
 }
 
 export default function ScoringAdmin() {
-    const [data, setData] = useState<DataInt>({ offense: [], dst: [], kicker: [] });
+    const [data, setData] = useState<DataInt>({offense: [], dst: [], kicker: []});
     const [loading, setLoading] = useState(true);
     const [tab, setTab] = useState<ScoringCategory>('offense');
 
@@ -35,7 +35,7 @@ export default function ScoringAdmin() {
     useEffect(() => {
         const fetchScores = async () => {
             try {
-                const json = await fetch(`${getURL()}/api/Admin/Scoring`, {
+                const json = await fetch(`${getURL()}/api/scores`, {
                     credentials: 'include',
                 }).then(res => res.json());
 
@@ -46,7 +46,7 @@ export default function ScoringAdmin() {
                 const initialValues: Record<string, Record<string, number>> = {};
                 Object.keys(json.results).forEach(cat => {
                     json.results[cat].forEach((entity: any) => {
-                        initialValues[entity.entityId] = { ...entity.stats };
+                        initialValues[entity.entityId] = {...(entity.scores ?? {})};
                     });
                 });
                 setValues(initialValues);
@@ -65,15 +65,16 @@ export default function ScoringAdmin() {
         [values]
     );
 
-    // Sort entities once on load
     const sortedEntities = useMemo(() => {
         const currentTabData = data?.[tab] ?? [];
-        return [...currentTabData].sort((a, b) => {
-            const aMissing = STAT_DEFINITIONS[tab].filter(s => !(a.stats?.[s.key] ?? 0)).length;
-            const bMissing = STAT_DEFINITIONS[tab].filter(s => !(b.stats?.[s.key] ?? 0)).length;
-            return bMissing - aMissing;
-        });
-    }, [data, tab]);
+        return [...currentTabData]
+            .sort((a, b) => a.displayName.localeCompare(b.displayName))
+            .map(entity => ({
+                ...entity,
+                // merge current values into scores
+                scores: values[entity.entityId] ?? entity.scores ?? {},
+            }));
+    }, [data, tab, values]);
 
     // Handle table changes
     const handleChange = useCallback((entityId: string, statKey: string, value: number) => {
@@ -107,11 +108,11 @@ export default function ScoringAdmin() {
         setSaving(true);
 
         try {
-            await fetch(`${getURL()}/api/Admin/Scoring/Update`, {
+            await fetch(`${getURL()}/api/Admin/Scoring`, {
                 method: 'POST',
                 credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ changes }),
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({changes}),
             });
 
             dirtyRef.current = {};
@@ -126,21 +127,21 @@ export default function ScoringAdmin() {
 
     if (loading) {
         return (
-            <Box height="100%" width="100%" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CircularProgress />
+            <Box height="100%" width="100%" sx={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                <CircularProgress/>
             </Box>
         );
     }
 
     return (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <Box sx={{height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0}}>
             <Typography variant="h4" gutterBottom>
                 Scoring Admin
             </Typography>
 
-            <ScoringTabs tab={tab} onTabChange={setTab} />
+            <ScoringTabs tab={tab} onTabChange={setTab}/>
 
-            <Box sx={{ flex: 1, minHeight: 0 }}>
+            <Box sx={{flex: 1, minHeight: 0}}>
                 <ScoringDataGrid
                     entities={sortedEntities}
                     stats={STAT_DEFINITIONS[tab]}
@@ -149,7 +150,7 @@ export default function ScoringAdmin() {
                 />
             </Box>
 
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2 }}>
+            <Box sx={{mt: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2}}>
                 {hasUnsavedChanges && (
                     <Button variant="contained" color="primary" disabled={saving} onClick={saveChanges}>
                         {isAutosaving ? 'Autosaving' : 'Save Now'}

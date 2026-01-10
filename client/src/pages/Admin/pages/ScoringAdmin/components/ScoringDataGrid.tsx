@@ -2,16 +2,14 @@ import * as React from 'react';
 import {
     DataGrid,
     GridColDef,
-    GridCellModes,
-    GridCellModesModel,
-    GridCellParams,
     GridRowsProp,
     GridEventListener,
+    useGridApiRef,
 } from '@mui/x-data-grid';
-import {Box} from '@mui/material';
+import {Box, Stack, Tooltip, Typography} from '@mui/material';
 import {StatDefinition} from '../logic/scoringStatDefinitions';
-import {useEffect} from "react";
 import {CustomToolbar} from "./CustomToolbar";
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 
 interface Props {
     entities: any[];
@@ -20,86 +18,47 @@ interface Props {
     onChange: (entityId: string, statKey: string, value: number) => void;
 }
 
-export const ScoringDataGrid = ({entities, stats, getInitialValue, onChange}: Props) => {
-    const [cellModesModel, setCellModesModel] = React.useState<GridCellModesModel>({});
+export const ScoringDataGrid = ({
+                                    entities,
+                                    stats,
+                                    getInitialValue,
+                                    onChange,
+                                }: Props) => {
 
-    /** Handle single-click edit */
-    const handleCellClick = React.useCallback(
-        (params: GridCellParams) => {
-            if (!params.colDef.editable) return;
-
-            setCellModesModel(prev => {
-                const newModel: GridCellModesModel = {};
-                Object.keys(prev).forEach(rowId => {
-                    newModel[rowId] = {};
-                    Object.keys(prev[rowId]).forEach(field => {
-                        newModel[rowId][field] = {mode: GridCellModes.View};
-                    });
-                });
-
-                newModel[params.id] = {
-                    ...(newModel[params.id] || {}),
-                    [params.field]: {mode: GridCellModes.Edit},
-                };
-                return newModel;
-            });
-        },
-        []
-    );
-
-    const handleCellModesModelChange = React.useCallback(
-        (newModel: GridCellModesModel) => setCellModesModel(newModel),
-        []
-    );
+    const apiRef = useGridApiRef();
 
     const handleCellEditStop: GridEventListener<'cellEditStop'> = (params, event) => {
-        const value = Number(params.value ?? 0);
-        const current = getInitialValue(params.id as string, params.field);
-        const currentNormalized = current ?? 0;
+        const keyboardEvent = event as React.KeyboardEvent;
+        if (keyboardEvent.key !== 'Tab') return;
 
-        if (value !== currentNormalized) {
-            onChange(params.id as string, params.field, value);
+        event.defaultMuiPrevented = true;
+
+        const rowIndex = entities.findIndex(e => e.entityId === params.id);
+        const colIndex = stats.findIndex(s => s.key === params.field);
+
+        if (rowIndex === -1 || colIndex === -1) return;
+
+        let nextRow = rowIndex;
+        let nextCol = colIndex + (keyboardEvent.shiftKey ? -1 : 1);
+
+        if (nextCol >= stats.length) {
+            nextCol = 0;
+            nextRow++;
+        } else if (nextCol < 0) {
+            nextCol = stats.length - 1;
+            nextRow--;
         }
 
-        // Tab navigation
-        const keyboardEvent = event as unknown as React.KeyboardEvent;
-        if (keyboardEvent?.key === 'Tab') {
-            event.defaultMuiPrevented = true;
+        if (nextRow < 0 || nextRow >= entities.length) return;
 
-            const rowIndex = entities.findIndex(e => e.entityId === params.id);
-            const colIndex = stats.findIndex(s => s.key === params.field);
-            if (rowIndex === -1 || colIndex === -1) return;
+        const nextRowId = entities[nextRow].entityId;
+        const nextField = stats[nextCol].key;
 
-            let nextRow = rowIndex;
-            let nextCol = colIndex;
-
-            if (keyboardEvent.shiftKey) {
-                nextCol--;
-                if (nextCol < 0) {
-                    nextRow--;
-                    nextCol = stats.length - 1;
-                }
-            } else {
-                nextCol++;
-                if (nextCol >= stats.length) {
-                    nextRow++;
-                    nextCol = 0;
-                }
-            }
-
-            if (nextRow < 0 || nextRow >= entities.length) return;
-
-            const nextId = entities[nextRow].entityId;
-            const nextField = stats[nextCol].key;
-
-            setCellModesModel(prev => ({
-                ...prev,
-                [nextId]: {
-                    ...(prev[nextId] || {}),
-                    [nextField]: {mode: GridCellModes.Edit},
-                },
-            }));
-        }
+        apiRef?.current?.setCellFocus(nextRowId, nextField);
+        apiRef?.current?.startCellEditMode({
+            id: nextRowId,
+            field: nextField,
+        });
     };
 
     const columns: GridColDef[] = [
@@ -108,6 +67,36 @@ export const ScoringDataGrid = ({entities, stats, getInitialValue, onChange}: Pr
             headerName: 'Name',
             width: 220,
             editable: false,
+            renderCell: (params) => {
+                const entity = entities.find(e => e.entityId === params.id);
+                const hasData = entity && entity.scores && Object.keys(entity.scores).length > 0;
+
+                const tooltipText = entity
+                    ?
+                    <Stack>
+                        <Typography variant='body2'>
+                            <b>{`Last updated:`}</b>{` ${entity.updatedAt ? new Date(entity.updatedAt).toLocaleString() : 'N/A'}`}
+                        </Typography>
+                        <Typography variant='body2'>
+                            <b>{`Drafted by:`}</b>{` ${entity.draftCount || 0} user(s)`}
+                        </Typography>
+                    </Stack>
+                    : '';
+
+                return (
+                    <Tooltip title={tooltipText}>
+                        <Stack sx={{height: '100%', display: 'flex', alignItems: 'center'}} direction='row' spacing={1}>
+                            {!hasData &&
+                                <Tooltip title="Player has no data for this round">
+                                    <ErrorOutlineIcon color="warning" fontSize="small"/>
+                                </Tooltip>
+                            }
+                            <Typography>{params.value}</Typography>
+                        </Stack>
+                    </Tooltip>
+                );
+            },
+            description: 'Hover for last update & drafted count',
         },
         ...stats.map(stat => ({
             field: stat.key,
@@ -117,26 +106,47 @@ export const ScoringDataGrid = ({entities, stats, getInitialValue, onChange}: Pr
         })),
     ];
 
-    // Rows
     const rows: GridRowsProp = entities.map(e => ({
         id: e.entityId,
         name: e.displayName,
-        ...Object.fromEntries(stats.map(s => [s.key, getInitialValue(e.entityId, s.key) ?? 0])),
+        ...Object.fromEntries(
+            stats.map(s => [s.key, e.scores?.[s.key] ?? 0])
+        ),
+        updatedAt: e.updatedAt,
+        draftCount: e.draftCount,
     }));
+
+    const processRowUpdate = React.useCallback(
+        (newRow: any, oldRow: any) => {
+            stats.forEach(stat => {
+                const key = stat.key;
+                const newValue = Number(newRow[key] ?? 0);
+                const oldValue = Number(oldRow[key] ?? 0);
+
+                if (newValue !== oldValue) {
+                    onChange(newRow.id, key, newValue);
+                }
+            });
+
+            return newRow;
+        },
+        [stats, onChange]
+    );
 
     return (
         <Box sx={{height: '100%', width: '100%'}}>
             <DataGrid
+                apiRef={apiRef}
                 rows={rows}
                 columns={columns}
-                density="compact"
+                initialState={{
+                    density: 'compact'
+                }}
                 disableColumnMenu
                 hideFooter
                 autoHeight={false}
-                cellModesModel={cellModesModel}
-                onCellModesModelChange={handleCellModesModelChange}
-                onCellClick={handleCellClick}
                 onCellEditStop={handleCellEditStop}
+                processRowUpdate={processRowUpdate}
                 slots={{toolbar: CustomToolbar}}
                 showToolbar
             />

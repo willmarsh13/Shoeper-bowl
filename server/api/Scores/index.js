@@ -1,12 +1,13 @@
 const router = require("express").Router();
-const {updateScores} = require('./databaseOperations')
+const {getScores} = require("./databaseOperations.js")
 
 router
     .route("/")
-    .post((req, res) => {
-        updateScores(req, res).then((data) => {
+    .get((req, res) => {
+        getScores(req, res).then((data) => {
             res.status(200).json(data);
         })
     })
+
 
 module.exports = router;
