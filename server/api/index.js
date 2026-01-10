@@ -12,5 +12,6 @@ router.use('/HTML', require('./HTML'))
 router.use('/playerSearch', require('./PlayerSearch'))
 router.use('/game', require('./Game'))
 router.use('/picks', require('./Picks'))
+router.use('/overview', require('./Overview'))
 
 module.exports = router;

@@ -21,6 +21,7 @@ import {useSelector} from "react-redux";
 import {RootState} from "./redux/store";
 import {Box} from "@mui/material";
 import "./Shared/logic/index.css"
+import Overview from "./pages/Overview";
 
 
 export const pages: page[] = [
@@ -121,6 +122,16 @@ export const pages: page[] = [
         isIndex: false,
         showOnHeader: false,
         showInNavBar: false,
+    },
+    {
+        id: 8,
+        element: <Overview/>,
+        name: 'Overview',
+        link: '/shoeper-bowl/Overview',
+        routerLink: '/Overview',
+        isIndex: false,
+        showOnHeader: true,
+        showInNavBar: true,
     },
 ];
 
