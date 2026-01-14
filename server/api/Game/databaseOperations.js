@@ -64,4 +64,5 @@ async function getGameInfo() {
 
 module.exports = {
     getGameInfo,
+    LOCKED_ROUND_PRIORITY,
 };

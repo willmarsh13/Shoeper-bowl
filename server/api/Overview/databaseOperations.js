@@ -1,5 +1,5 @@
 const client = require("../MongoClient");
-const { getGameInfo } = require("../Game/databaseOperations");
+const { getGameInfo, LOCKED_ROUND_PRIORITY} = require("../Game/databaseOperations");
 const { POSITION_CATEGORY_MAP } = require("../Admin/Scoring/helpers/scoringCategoryMap");
 const { calculateEntityScore } = require("../services/calculateFantasyPoints");
 const { ROUND_CONFIG } = require("../logic/roundRules");
@@ -11,7 +11,7 @@ async function getOverview(req) {
     const userPicksCollection = db.collection("UserPicks");
     const scoresCollection = db.collection("Scores");
 
-    const { round: currentRound } = await getGameInfo(req);
+    const { round: currentRound } = await getRoundForOverview(req);
     const allRounds = Object.keys(ROUND_CONFIG);
 
     const picks = await userPicksCollection.find({}).toArray();
@@ -91,6 +91,82 @@ async function getOverview(req) {
         },
     };
 }
+
+async function getRoundForOverview() {
+    await client.connect();
+
+    const db = client.db("FantasyFootball");
+    const gameInfoCollection = db.collection("GameInfo");
+    const scoresCollection = db.collection("Scores");
+
+    const allRounds = Object.keys(ROUND_CONFIG);
+
+    async function roundHasScores(round) {
+        const count = await scoresCollection.countDocuments({ round });
+        return count > 0;
+    }
+
+    /* Step 1: Prefer any Active round WITH scores */
+    const activeGame = await gameInfoCollection.findOne(
+        { status: "Active" },
+        { projection: { _id: 0 } }
+    );
+
+    if (activeGame) {
+        const round = activeGame.round || "WILD_CARD";
+
+        if (await roundHasScores(round)) {
+            return {
+                round,
+                teams: activeGame.teams || [],
+                status: activeGame.status || "Active",
+            };
+        }
+    }
+
+    /* Step 2: Locked rounds in priority order WITH scores */
+    const lockedGames = await gameInfoCollection
+        .find(
+            {
+                status: "Locked",
+                round: { $in: LOCKED_ROUND_PRIORITY },
+            },
+            { projection: { _id: 0 } }
+        )
+        .toArray();
+
+    for (const round of LOCKED_ROUND_PRIORITY) {
+        const game = lockedGames.find(g => g.round === round);
+        if (!game) continue;
+
+        if (await roundHasScores(round)) {
+            return {
+                round,
+                teams: game.teams || [],
+                status: game.status || "Locked",
+            };
+        }
+    }
+
+    /* Step 3: Walk backward through rounds until scores exist */
+    for (const round of allRounds.slice().reverse()) {
+        if (await roundHasScores(round)) {
+            return {
+                round,
+                teams: [],
+                status: "Locked",
+            };
+        }
+    }
+
+    /* Step 4: Absolute safe fallback */
+    return {
+        round: "WILD_CARD",
+        teams: [],
+        status: "Active",
+    };
+}
+
 
 module.exports = {
     getOverview,
