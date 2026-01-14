@@ -1,5 +1,5 @@
 const client = require("../MongoClient");
-const { getGameInfo, LOCKED_ROUND_PRIORITY} = require("../Game/databaseOperations");
+const { LOCKED_ROUND_PRIORITY } = require("../Game/databaseOperations");
 const { POSITION_CATEGORY_MAP } = require("../Admin/Scoring/helpers/scoringCategoryMap");
 const { calculateEntityScore } = require("../services/calculateFantasyPoints");
 const { ROUND_CONFIG } = require("../logic/roundRules");
@@ -10,10 +10,23 @@ async function getOverview(req) {
     const db = client.db("FantasyFootball");
     const userPicksCollection = db.collection("UserPicks");
     const scoresCollection = db.collection("Scores");
+    const gameInfoCollection = db.collection("GameInfo");
 
     const { round: currentRound } = await getRoundForOverview(req);
     const allRounds = Object.keys(ROUND_CONFIG);
 
+    /* ----------------------------------------
+       Determine which rounds are LOCKED
+    ----------------------------------------- */
+    const lockedGames = await gameInfoCollection
+        .find({ status: "Locked" }, { projection: { round: 1 } })
+        .toArray();
+
+    const lockedRounds = new Set(lockedGames.map(g => g.round));
+
+    /* ----------------------------------------
+       Load data
+    ----------------------------------------- */
     const picks = await userPicksCollection.find({}).toArray();
     const scores = await scoresCollection.find({}).toArray();
 
@@ -24,6 +37,9 @@ async function getOverview(req) {
 
     const userMap = new Map();
 
+    /* ----------------------------------------
+       Build user data
+    ----------------------------------------- */
     for (const pick of picks) {
         const { email, firstName, lastName, round, roster = [] } = pick;
 
@@ -48,33 +64,50 @@ async function getOverview(req) {
 
         const user = userMap.get(email);
         let roundTotal = 0;
+        const isRoundLocked = lockedRounds.has(round);
 
         for (const slot of roster) {
             const category = POSITION_CATEGORY_MAP[slot.position];
-            if (!category || !slot.player) continue;
+            if (!category) continue;
 
-            const entityKey =
-                category === "dst"
-                    ? slot.player.team
-                    : `${slot.player.full_name}|${slot.player.team}|${slot.player.position}`;
+            let scoring = null;
 
-            const rawStats =
-                scoreMap.get(`${round}|${entityKey}`) || {};
+            if (slot.player) {
+                const entityKey =
+                    category === "dst"
+                        ? slot.player.team
+                        : `${slot.player.full_name}|${slot.player.team}|${slot.player.position}`;
 
-            const scoring = calculateEntityScore(category, rawStats);
-            roundTotal += scoring.totalPoints;
+                const rawStats =
+                    scoreMap.get(`${round}|${entityKey}`) || {};
 
-            user.perRoundRoster[round].push({
-                slotId: slot.slotId,
-                position: slot.position,
-                player: slot.player,
-                scoring,
-            });
+                scoring = calculateEntityScore(category, rawStats);
+                roundTotal += scoring.totalPoints;
+            }
+
+            if (isRoundLocked) {
+                user.perRoundRoster[round].push({
+                    slotId: slot.slotId,
+                    position: slot.position,
+                    player: slot.player || null,
+                    scoring,
+                });
+            } else {
+                user.perRoundRoster[round].push({
+                    slotId: slot.slotId,
+                    position: slot.position,
+                    player: null,
+                    scoring: null,
+                });
+            }
         }
 
         user.perRoundScores[round] = roundTotal;
     }
 
+    /* ----------------------------------------
+       Calculate totals
+    ----------------------------------------- */
     for (const user of userMap.values()) {
         user.totalScore = Object.values(user.perRoundScores).reduce(
             (sum, val) => sum + val,
@@ -166,7 +199,6 @@ async function getRoundForOverview() {
         status: "Active",
     };
 }
-
 
 module.exports = {
     getOverview,

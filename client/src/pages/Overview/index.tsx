@@ -127,7 +127,7 @@ const OverviewPage: React.FC = () => {
             type: "number",
             flex: 1,
             sortable: true,
-            valueFormatter: (val:number) =>
+            valueFormatter: (val: number) =>
                 val != null ? val.toFixed(2) : "0.00",
             minWidth: 100,
         },
@@ -137,7 +137,7 @@ const OverviewPage: React.FC = () => {
             type: "number",
             flex: 1,
             sortable: true,
-            valueFormatter: (val:number) =>
+            valueFormatter: (val: number) =>
                 val != null ? val.toFixed(2) : "0.00",
             minWidth: 100,
         },
@@ -156,8 +156,8 @@ const OverviewPage: React.FC = () => {
             const roster = user.perRoundRoster[selectedRound] || [];
 
             for (const slot of roster) {
-                row[slot.slotId] =
-                    `${slot.player.full_name} (${slot.scoring.totalPoints.toFixed(2)})`;
+                row[slot.slotId] = slot?.player?.full_name ?
+                    `${slot?.player?.full_name} (${slot?.scoring?.totalPoints?.toFixed(2)})` : ''
             }
 
             return row;
