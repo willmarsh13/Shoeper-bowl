@@ -54,7 +54,7 @@ async function updateScores(req, res) {
                 continue;
             }
 
-            if (typeof value !== 'number' || value < 0) {
+            if (typeof value !== 'number') {
                 invalidStats.push({key, statKey});
                 continue;
             }

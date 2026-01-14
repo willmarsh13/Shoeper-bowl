@@ -1,16 +1,24 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from "react";
 import {
     Box,
     Typography,
     CircularProgress,
-    Button,
-    Stack
-} from '@mui/material';
-import {DataGrid, GridColDef, GridRowsProp} from '@mui/x-data-grid';
+    Stack,
+    Select,
+    MenuItem,
+    Button, Tooltip, IconButton,
+} from "@mui/material";
+import {DataGrid, GridColDef} from "@mui/x-data-grid";
+import * as XLSX from "xlsx";
 import {getURL} from "../../Shared/getURL";
 import checkUnauthorized from "../../Shared/handleCheckUnauth";
-import * as XLSX from 'xlsx';
-import {CustomToolbar} from "../Admin/pages/ScoringAdmin/components/CustomToolbar";
+import {ROUND_CONFIG, RoundConfig} from "../BuildTeam/logic/roundRules";
+import InfoIcon from "@mui/icons-material/Info";
+import RulesModal from "../BuildTeam/components/RuleModal";
+
+/* =======================
+   Types
+======================= */
 
 interface Player {
     full_name: string;
@@ -18,153 +26,250 @@ interface Player {
     position: string;
 }
 
-interface Roster {
-    player: Player;
-    position: string;
-    slotId: string;
+interface Scoring {
+    totalPoints: number;
 }
 
-interface UserPick {
+interface RosterItem {
+    slotId: string;
+    position: string;
+    player: Player;
+    scoring: Scoring;
+}
+
+interface UserOverview {
     email: string;
     firstName: string;
     lastName: string;
-    roster: Roster[];
+    perRoundScores: Record<string, number>;
+    perRoundRoster: Record<string, RosterItem[]>;
+    totalScore: number;
 }
+
+
+interface OverviewResponse {
+    currentRound: string;
+    rounds: string[];
+    users: UserOverview[];
+}
+
+/* =======================
+   Component
+======================= */
 
 const OverviewPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
-    const [message, setMessage] = useState<string | null>(null);
-    const [picks, setPicks] = useState<UserPick[]>([]);
-    const [slots, setSlots] = useState<string[]>([]);
+    const [users, setUsers] = useState<UserOverview[]>([]);
+    const [rounds, setRounds] = useState<RoundConfig[]>([]);
+    const [currentRound, setCurrentRound] = useState<string>("");
+    const [selectedRound, setSelectedRound] = useState<string>("");
+    const [rulesModalOpen, setRulesModalOpen] = useState<boolean>(false);
+
+    useEffect(() => {
+        setRounds(Object.values(ROUND_CONFIG));
+    }, []);
 
     useEffect(() => {
         const fetchOverview = async () => {
-            try {
-                const res = await fetch(`${getURL()}/api/overview`, {
-                    headers: {'content-type': 'application/json'},
-                    credentials: 'include'
-                });
-                const data = await res.json();
-                checkUnauthorized(data.status);
+            const res = await fetch(`${getURL()}/api/overview`, {
+                credentials: "include",
+            });
 
-                if (data.status === 200 && data.data) {
-                    setPicks(data.data.picks);
+            const data = await res.json();
+            checkUnauthorized(data.status);
 
-                    const allSlots: string[] = Array.from(new Set(
-                        data.data.picks.flatMap((user: UserPick) => user.roster.map(r => r.slotId))
-                    ));
+            if (!data.data) return;
 
-                    const slotOrder = ['QB', 'RB', 'RB2', 'WR', 'WR2', 'TE', 'FLEX', 'K', 'DST'];
-                    const sortedSlots = allSlots.sort((a, b) => {
-                        const ia: number = slotOrder.indexOf(a) !== -1 ? slotOrder.indexOf(a) : 999;
-                        const ib: number = slotOrder.indexOf(b) !== -1 ? slotOrder.indexOf(b) : 999;
-                        return ia - ib;
-                    });
+            const overview: OverviewResponse = data.data;
 
-                    setSlots(sortedSlots);
-                } else {
-                    setMessage(data.message);
-                }
-            } catch (err: any) {
-                setMessage(err?.response?.data?.message || "Error fetching overview");
-            } finally {
-                setLoading(false);
-            }
+            setUsers(overview.users);
+            setCurrentRound(overview.currentRound);
+            setSelectedRound(overview.currentRound);
+            setLoading(false);
         };
 
         fetchOverview();
     }, []);
 
-    const exportToExcel = () => {
-        const dataForExcel = picks.map((user) => {
-            const row: Record<string, string> = {Name: `${user.firstName} ${user.lastName}`};
-            slots.forEach((slotId) => {
-                const rosterItem = user.roster.find(r => r.slotId === slotId);
-                row[slotId] = rosterItem ? `${rosterItem.player.full_name} (${rosterItem.player.team})` : '';
-            });
+    /* =======================
+       Derived State
+    ======================= */
+
+    const rosterColumns: GridColDef[] = useMemo(() => {
+        const slotIds = Array.from(
+            new Set(
+                users.flatMap(u =>
+                    (u.perRoundRoster[selectedRound] || []).map(slot => slot.slotId)
+                )
+            )
+        );
+
+        return slotIds.map(slotId => ({
+            field: slotId,
+            headerName: slotId,
+            flex: 1,
+            sortable: false,
+        }));
+    }, [users, selectedRound]);
+
+
+    const columns: GridColDef[] = [
+        {
+            field: "name",
+            headerName: "Name",
+            flex: 1,
+        },
+        {
+            field: "roundScore",
+            headerName: "Round",
+            type: "number",
+            flex: 1,
+            sortable: true,
+            valueFormatter: (params: any) =>
+                params.value != null ? params.value.toFixed(2) : "0.00",
+        },
+        {
+            field: "totalScore",
+            headerName: "Total",
+            type: "number",
+            flex: 1,
+            sortable: true,
+            valueFormatter: (params: any) =>
+                params.value != null ? params.value.toFixed(2) : "0.00",
+        },
+        ...rosterColumns,
+    ];
+
+    const rows = useMemo(() => {
+        return users.map((user, idx) => {
+            const row: Record<string, any> = {
+                id: idx,
+                name: `${user.firstName} ${user.lastName}`,
+                roundScore: user.perRoundScores[selectedRound] ?? 0,
+                totalScore: user.totalScore,
+            };
+
+            const roster = user.perRoundRoster[selectedRound] || [];
+
+            for (const slot of roster) {
+                row[slot.slotId] =
+                    `${slot.player.full_name} (${slot.scoring.totalPoints.toFixed(2)})`;
+            }
+
             return row;
         });
+    }, [users, selectedRound]);
 
-        const ws = XLSX.utils.json_to_sheet(dataForExcel);
+
+    /* =======================
+       Export
+    ======================= */
+
+    const exportToExcel = () => {
+        const exportRows = rows.map(r => {
+            const cleanRow: Record<string, any> = {};
+            columns.forEach(col => {
+                const val = r[col.field];
+                cleanRow[col.headerName as string] =
+                    typeof val === "number" ? val.toFixed(2) : val ?? "";
+            });
+            return cleanRow;
+        });
+
+        const ws = XLSX.utils.json_to_sheet(exportRows);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Overview');
-        XLSX.writeFile(wb, 'FantasyPicks.xlsx');
+        XLSX.utils.book_append_sheet(wb, ws, "Overview");
+
+        XLSX.writeFile(
+            wb,
+            `overview_${selectedRound.toLowerCase()}.xlsx`
+        );
     };
+
+    /* =======================
+       Render
+    ======================= */
 
     if (loading) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" mt={5}>
+            <Box mt={5} display="flex" justifyContent="center">
                 <CircularProgress/>
             </Box>
         );
     }
 
-    if (message) {
-        return (
-            <Stack spacing={2} mt={5} textAlign="center" px={2}>
-                <Typography variant="h6">{message}</Typography>
-                <Button variant='contained' href='/shoeper-bowl/profile'>View my picks</Button>
-            </Stack>
-        );
-    }
-
-    // Columns
-    const columns: GridColDef[] = [
-        {
-            field: 'name',
-            headerName: 'Name',
-            flex: 1.5,
-            minWidth: 150,
-            headerClassName: 'super-app-theme--header',
-            sortable: true,
-        },
-        ...slots.map(slot => ({
-            field: slot,
-            headerName: slot,
-            flex: 1,
-            minWidth: 120,
-            sortable: true,
-        }))
-    ];
-
-    // Rows
-    const rows: GridRowsProp = picks.map((user, index) => {
-        const row: Record<string, any> = {
-            id: index,
-            name: `${user.firstName} ${user.lastName}`,
-        };
-        slots.forEach(slot => {
-            const rosterItem = user.roster.find(r => r.slotId === slot);
-            row[slot] = rosterItem ? `${rosterItem.player.full_name} (${rosterItem.player.team})` : '';
-        });
-        return row;
-    });
-
     return (
-        <Stack my={2} px={1} height="calc(100vh - 105px)" spacing={2}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="h5">Overview of Picks</Typography>
-                <Button variant="contained" color="primary" onClick={exportToExcel}>
-                    Export to Excel
-                </Button>
-            </Box>
+        <>
+            <Stack
+                spacing={2}
+                p={1}
+                py={2}
+                height='100%'
+            >
+                <Stack
+                    px={2}
+                    flexDirection='row'
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    spacing={2}
+                >
+                    <Box>
+                        <Tooltip title="Game Info & Rules">
+                            <IconButton color='primary' onClick={() => setRulesModalOpen(!rulesModalOpen)}>
+                                <InfoIcon/>
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
 
-            <Box flex={1} width="100%" sx={{overflowX: 'auto'}}>
-                <DataGrid
-                    rows={rows}
-                    columns={columns}
-                    checkboxSelection={false}
-                    slots={{toolbar: CustomToolbar}}
-                    sx={{
-                        fontSize: '0.8rem', // smaller text
-                        '& .MuiDataGrid-cell': {py: 0.5},
-                        '& .MuiDataGrid-columnHeaders': {fontSize: '0.85rem', minHeight: 35},
-                        '& .MuiDataGrid-row': {maxHeight: 60, alignItems: 'center'},
-                    }}
-                    showToolbar
-                />
-            </Box>
-        </Stack>
+                    <Typography variant="h5" flexGrow={1} sx={{marginTop: '0 !important'}}>Overview</Typography>
+
+                    <Stack direction="row" spacing={2}>
+                        <Select
+                            size="small"
+                            value={selectedRound}
+                            onChange={e => setSelectedRound(e.target.value)}
+                        >
+                            {rounds.map(round => (
+                                <MenuItem key={round.key} value={round.key}>
+                                    {round.displayName}
+                                </MenuItem>
+                            ))}
+                        </Select>
+
+                        <Button
+                            variant="contained"
+                            onClick={exportToExcel}
+                        >
+                            Export
+                        </Button>
+                    </Stack>
+                </Stack>
+
+                <Box flex={1} minHeight={0}>
+                    <DataGrid
+                        rows={rows}
+                        columns={columns}
+                        initialState={{
+                            sorting: {
+                                sortModel: [
+                                    {field: "roundScore", sort: "desc"},
+                                ],
+                            },
+                        }}
+                        disableRowSelectionOnClick
+                        sx={{
+                            height: "100%",
+                            fontSize: "0.85rem",
+                            "& .MuiDataGrid-cell": {
+                                py: 0.5,
+                            },
+                        }}
+                    />
+                </Box>
+            </Stack>
+            <RulesModal open={rulesModalOpen} onClose={(newVal) => setRulesModalOpen(newVal)}/>
+        </>
     );
 };
 

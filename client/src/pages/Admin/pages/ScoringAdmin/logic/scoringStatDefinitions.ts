@@ -25,6 +25,7 @@ export const STAT_DEFINITIONS: Record<ScoringCategory, StatDefinition[]> = {
         { key: 'kickReturnTD', label: 'Kick Ret TD' },
         { key: 'puntReturnTD', label: 'Punt Ret TD' },
         { key: 'intReturnTD', label: 'INT Ret TD' },
+        { key: 'fumbleReturnTD', label: 'Fumble Ret TD' },
         { key: 'blockedReturnTD', label: 'Blk Kick TD' },
         { key: 'twoPtReturn', label: '2PT Ret' },
         { key: 'onePtSafety', label: '1PT Safety' },

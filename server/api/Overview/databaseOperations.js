@@ -1,45 +1,97 @@
 const client = require("../MongoClient");
-const {getGameInfo} = require("../Game/databaseOperations");
+const { getGameInfo } = require("../Game/databaseOperations");
+const { POSITION_CATEGORY_MAP } = require("../Admin/Scoring/helpers/scoringCategoryMap");
+const { calculateEntityScore } = require("../services/calculateFantasyPoints");
+const { ROUND_CONFIG } = require("../logic/roundRules");
 
 async function getOverview(req) {
     await client.connect();
-    const userPicksCollection = client.db('FantasyFootball').collection('UserPicks');
 
-    const {status: gameStatus, round: currentRound} = await getGameInfo(req);
+    const db = client.db("FantasyFootball");
+    const userPicksCollection = db.collection("UserPicks");
+    const scoresCollection = db.collection("Scores");
 
-    if (!currentRound) {
-        return {
-            status: 400,
-            variant: 'error',
-            message: 'No active round found',
-            data: null,
-        };
+    const { round: currentRound } = await getGameInfo(req);
+    const allRounds = Object.keys(ROUND_CONFIG);
+
+    const picks = await userPicksCollection.find({}).toArray();
+    const scores = await scoresCollection.find({}).toArray();
+
+    const scoreMap = new Map();
+    for (const doc of scores) {
+        scoreMap.set(`${doc.round}|${doc.key}`, doc.scores || {});
     }
 
-    if (gameStatus !== 'Locked') {
-        return {
-            status: 200,
-            variant: 'info',
-            message: 'Picks are not available until after kickoff of the first game of this round',
-            data: null
-        };
+    const userMap = new Map();
+
+    for (const pick of picks) {
+        const { email, firstName, lastName, round, roster = [] } = pick;
+
+        if (!userMap.has(email)) {
+            const perRoundScores = {};
+            const perRoundRoster = {};
+
+            for (const r of allRounds) {
+                perRoundScores[r] = 0;
+                perRoundRoster[r] = [];
+            }
+
+            userMap.set(email, {
+                email,
+                firstName,
+                lastName,
+                perRoundScores,
+                perRoundRoster,
+                totalScore: 0,
+            });
+        }
+
+        const user = userMap.get(email);
+        let roundTotal = 0;
+
+        for (const slot of roster) {
+            const category = POSITION_CATEGORY_MAP[slot.position];
+            if (!category || !slot.player) continue;
+
+            const entityKey =
+                category === "dst"
+                    ? slot.player.team
+                    : `${slot.player.full_name}|${slot.player.team}|${slot.player.position}`;
+
+            const rawStats =
+                scoreMap.get(`${round}|${entityKey}`) || {};
+
+            const scoring = calculateEntityScore(category, rawStats);
+            roundTotal += scoring.totalPoints;
+
+            user.perRoundRoster[round].push({
+                slotId: slot.slotId,
+                position: slot.position,
+                player: slot.player,
+                scoring,
+            });
+        }
+
+        user.perRoundScores[round] = roundTotal;
     }
 
-    // Pull everyone’s picks for current round
-    const picks = await userPicksCollection
-        .find({round: currentRound})
-        .project({_id: 0, email: 1, firstName: 1, lastName: 1, roster: 1, timestamp: 1})
-        .toArray();
+    for (const user of userMap.values()) {
+        user.totalScore = Object.values(user.perRoundScores).reduce(
+            (sum, val) => sum + val,
+            0
+        );
+    }
 
     return {
         status: 200,
-        variant: 'success',
         data: {
-            picks,
-        }
+            currentRound,
+            rounds: allRounds,
+            users: Array.from(userMap.values()),
+        },
     };
 }
 
 module.exports = {
-    getOverview
+    getOverview,
 };

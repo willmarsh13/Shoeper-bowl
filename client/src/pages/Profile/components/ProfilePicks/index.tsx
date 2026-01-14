@@ -13,20 +13,22 @@ import {
     Divider,
 } from '@mui/material';
 import {ProfilePick} from '../../../../Interfaces/Player';
-import {ROUND_CONFIG} from "../../../BuildTeam/logic/roundRules";
+import {RoundConfig} from "../../../BuildTeam/logic/roundRules";
 import {useEffect} from "react";
-import {useSelector} from "react-redux";
-import {RootState} from "../../../../redux/store";
 
 interface ProfilePicksProps {
     picks: ProfilePick[];
+    round: RoundConfig;
 }
 
 const POSITION_ORDER = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'];
 
-const ProfilePicks: React.FC<ProfilePicksProps> = ({picks}) => {
-    const round = useSelector((s: RootState) => s.roster.round);
-    const roundLabel = ROUND_CONFIG[round]?.displayName ?? round;
+const ProfilePicks: React.FC<ProfilePicksProps> = ({picks, round}) => {
+    const [roundLabel, setRoundLabel] = React.useState<string>('');
+
+    useEffect(() => {
+        setRoundLabel(round.displayName)
+    }, [round]);
 
     const groupedByPosition = React.useMemo(() => {
         return picks.reduce<Record<string, ProfilePick[]>>((acc, pick) => {

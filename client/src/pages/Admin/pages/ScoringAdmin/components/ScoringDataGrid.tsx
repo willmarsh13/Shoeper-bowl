@@ -14,18 +14,20 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 interface Props {
     entities: any[];
     stats: StatDefinition[];
-    getInitialValue: (entityId: string, statKey: string) => number | undefined;
     onChange: (entityId: string, statKey: string, value: number) => void;
 }
 
 export const ScoringDataGrid = ({
                                     entities,
                                     stats,
-                                    getInitialValue,
                                     onChange,
                                 }: Props) => {
 
     const apiRef = useGridApiRef();
+
+    if (!Array.isArray(entities) || !Array.isArray(stats)) {
+        return null;
+    }
 
     const handleCellEditStop: GridEventListener<'cellEditStop'> = (params, event) => {
         const keyboardEvent = event as React.KeyboardEvent;
@@ -98,6 +100,11 @@ export const ScoringDataGrid = ({
             },
             description: 'Hover for last update & drafted count',
         },
+        {
+            field: 'team',
+            headerName: 'Team',
+            width: 120,
+        },
         ...stats.map(stat => ({
             field: stat.key,
             headerName: stat.label || stat.key,
@@ -109,6 +116,7 @@ export const ScoringDataGrid = ({
     const rows: GridRowsProp = entities.map(e => ({
         id: e.entityId,
         name: e.displayName,
+        team: e.team,
         ...Object.fromEntries(
             stats.map(s => [s.key, e.scores?.[s.key] ?? 0])
         ),

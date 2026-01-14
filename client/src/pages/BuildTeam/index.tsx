@@ -141,7 +141,7 @@ const BuildTeam: React.FC = () => {
         <>
             <Container maxWidth="lg" sx={{py: 4}}>
                 <Stack direction='row' justifyContent='space-between'>
-                    <Typography variant="h4" gutterBottom>Fantasy Post-Season Roster Builder</Typography>
+                    <Typography variant="h4" gutterBottom>{`${ROUND_CONFIG[round].displayName} Roster Builder`}</Typography>
                     <Box>
                         <Tooltip title="Game Info & Rules">
                             <IconButton color='primary' onClick={() => setRulesModalOpen(!rulesModalOpen)}>
