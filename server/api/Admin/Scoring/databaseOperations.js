@@ -1,10 +1,10 @@
 const {checkAdmin} = require("../../Auth/authorization");
 const client = require("../../MongoClient");
-const {getGameInfo} = require("../../Game/databaseOperations");
 const {ALLOWED_STAT_KEYS} = require("../../Scores/scoringStats");
 
 async function updateScores(req, res) {
     const {Role} = await checkAdmin(req, res);
+    const {round} = req.body
 
     if (Role !== 'Admin' && Role !== 'admin') {
         return {
@@ -26,8 +26,6 @@ async function updateScores(req, res) {
             message: 'Invalid score payload',
         };
     }
-
-    const {round} = await getGameInfo(req);
 
     if (!round) {
         return {
