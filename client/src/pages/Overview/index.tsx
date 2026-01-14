@@ -109,6 +109,7 @@ const OverviewPage: React.FC = () => {
             headerName: slotId,
             flex: 1,
             sortable: false,
+            minWidth: 175,
         }));
     }, [users, selectedRound]);
 
@@ -118,6 +119,7 @@ const OverviewPage: React.FC = () => {
             field: "name",
             headerName: "Name",
             flex: 1,
+            minWidth: 150,
         },
         {
             field: "roundScore",
@@ -125,8 +127,9 @@ const OverviewPage: React.FC = () => {
             type: "number",
             flex: 1,
             sortable: true,
-            valueFormatter: (params: any) =>
-                params.value != null ? params.value.toFixed(2) : "0.00",
+            valueFormatter: (val:number) =>
+                val != null ? val.toFixed(2) : "0.00",
+            minWidth: 100,
         },
         {
             field: "totalScore",
@@ -134,8 +137,9 @@ const OverviewPage: React.FC = () => {
             type: "number",
             flex: 1,
             sortable: true,
-            valueFormatter: (params: any) =>
-                params.value != null ? params.value.toFixed(2) : "0.00",
+            valueFormatter: (val:number) =>
+                val != null ? val.toFixed(2) : "0.00",
+            minWidth: 100,
         },
         ...rosterColumns,
     ];
@@ -185,6 +189,10 @@ const OverviewPage: React.FC = () => {
             `overview_${selectedRound.toLowerCase()}.xlsx`
         );
     };
+
+    useEffect(() => {
+        console.log(rows)
+    }, [rows]);
 
     /* =======================
        Render
