@@ -27,7 +27,7 @@ const ProfilePicks: React.FC<ProfilePicksProps> = ({picks, round}) => {
     const [roundLabel, setRoundLabel] = React.useState<string>('');
 
     useEffect(() => {
-        setRoundLabel(round.displayName)
+        setRoundLabel(round?.displayName)
     }, [round]);
 
     const groupedByPosition = React.useMemo(() => {
