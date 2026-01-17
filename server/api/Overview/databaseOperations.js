@@ -202,4 +202,5 @@ async function getRoundForOverview() {
 
 module.exports = {
     getOverview,
+    getRoundForOverview,
 };

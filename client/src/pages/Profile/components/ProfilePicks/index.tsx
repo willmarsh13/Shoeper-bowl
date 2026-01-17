@@ -12,23 +12,25 @@ import {
     Stack,
     Divider,
 } from '@mui/material';
-import {ProfilePick} from '../../../../Interfaces/Player';
+import {Position, ProfilePick} from '../../../../Interfaces/Player';
 import {RoundConfig} from "../../../BuildTeam/logic/roundRules";
 import {useEffect} from "react";
 
 interface ProfilePicksProps {
     picks: ProfilePick[];
-    round: RoundConfig;
 }
 
 const POSITION_ORDER = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'];
+export const position_mapping = {
+    QB: 'Quarterback',
+    RB: 'Running Back',
+    WR: 'Wide Receiver',
+    TE: 'Tight End',
+    K: 'Kicker',
+    'DST': 'Defense/Special Teams'
+}
 
-const ProfilePicks: React.FC<ProfilePicksProps> = ({picks, round}) => {
-    const [roundLabel, setRoundLabel] = React.useState<string>('');
-
-    useEffect(() => {
-        setRoundLabel(round?.displayName)
-    }, [round]);
+const ProfilePicks: React.FC<ProfilePicksProps> = ({picks}) => {
 
     const groupedByPosition = React.useMemo(() => {
         return picks.reduce<Record<string, ProfilePick[]>>((acc, pick) => {
@@ -55,17 +57,12 @@ const ProfilePicks: React.FC<ProfilePicksProps> = ({picks, round}) => {
                     <Typography variant="h5">
                         My Picks
                     </Typography>
-                    <Chip
-                        label={roundLabel}
-                        color="success"
-                        variant="outlined"
-                    />
                 </Stack>
 
                 <Divider/>
 
                 <TableContainer>
-                    <Table>
+                    <Table size='small'>
                         <TableHead
                             sx={{
                                 backgroundColor: theme =>
@@ -96,7 +93,7 @@ const ProfilePicks: React.FC<ProfilePicksProps> = ({picks, round}) => {
                                             <TableCell
                                                 colSpan={3}
                                                 sx={{
-                                                    borderLeft: theme => `6px solid ${theme.palette.primary.main}`,
+                                                    borderTop: theme => `${theme.palette.primary.main}`,
                                                     py: 1,
                                                 }}
                                             >
@@ -104,15 +101,23 @@ const ProfilePicks: React.FC<ProfilePicksProps> = ({picks, round}) => {
                                                     variant="overline"
                                                     fontWeight={700}
                                                     letterSpacing={1}
+                                                    textAlign="center"
                                                 >
-                                                    {position}
+                                                    {position_mapping[position as Position]}
                                                 </Typography>
                                             </TableCell>
                                         </TableRow>
 
                                         {rows?.map(pick => (
                                             <TableRow key={pick.id}>
-                                                <TableCell sx={{color: 'text.secondary'}}>—</TableCell>
+                                                <TableCell
+                                                    sx={{
+                                                        color: 'text.secondary',
+                                                        py: 1,
+                                                        borderLeft: theme => `6px solid ${theme.palette.primary.main}`,
+                                                    }}>
+                                                    {pick.player.position}
+                                                </TableCell>
                                                 <TableCell>
                                                     {pick.player.full_name}
                                                 </TableCell>

@@ -1,7 +1,7 @@
 import {PlayoffRound} from "../pages/BuildTeam/logic/roundRules";
 
 
-export type Position = 'QB' | 'RB' | 'WR' | 'TE' | 'K' | 'D/ST';
+export type Position = 'QB' | 'RB' | 'WR' | 'TE' | 'K' | 'DST';
 
 export interface Player {
     id: string;
