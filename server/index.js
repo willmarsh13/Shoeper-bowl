@@ -14,6 +14,7 @@ app.use(cors({
         'http://localhost:3000',
         'http://localhost:3001',
         'http://localhost:3002',
+        'http://localhost:3003',
         'https://willmarsh.dev',
     ], // Add your allowed origins here
     credentials: true,

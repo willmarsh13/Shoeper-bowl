@@ -38,6 +38,7 @@ interface RosterItem {
 }
 
 interface UserOverview {
+    rank: number;
     email: string;
     firstName: string;
     lastName: string;
@@ -61,7 +62,6 @@ const OverviewPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState<UserOverview[]>([]);
     const [rounds, setRounds] = useState<RoundConfig[]>([]);
-    const [currentRound, setCurrentRound] = useState<string>("");
     const [selectedRound, setSelectedRound] = useState<string>("");
     const [rulesModalOpen, setRulesModalOpen] = useState<boolean>(false);
 
@@ -83,7 +83,6 @@ const OverviewPage: React.FC = () => {
             const overview: OverviewResponse = data.data;
 
             setUsers(overview.users);
-            setCurrentRound(overview.currentRound);
             setSelectedRound(overview.currentRound);
             setLoading(false);
         };
@@ -116,6 +115,16 @@ const OverviewPage: React.FC = () => {
 
     const columns: GridColDef[] = [
         {
+            field: "rank",
+            headerName: "Overall Rank",
+            type: "number",
+            flex: 1,
+            sortable: true,
+            valueFormatter: (val: number) =>
+                val != null ? val.toFixed(0) : "0",
+            minWidth: 75,
+        },
+        {
             field: "name",
             headerName: "Name",
             flex: 1,
@@ -129,7 +138,7 @@ const OverviewPage: React.FC = () => {
             sortable: true,
             valueFormatter: (val: number) =>
                 val != null ? val.toFixed(2) : "0.00",
-            minWidth: 100,
+            minWidth: 75,
         },
         {
             field: "totalScore",
@@ -151,6 +160,7 @@ const OverviewPage: React.FC = () => {
                 name: `${user.firstName} ${user.lastName}`,
                 roundScore: user.perRoundScores[selectedRound] ?? 0,
                 totalScore: user.totalScore,
+                rank: user.rank,
             };
 
             const roster = user.perRoundRoster[selectedRound] || [];

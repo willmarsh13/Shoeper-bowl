@@ -1,8 +1,8 @@
 const client = require("../MongoClient");
-const { LOCKED_ROUND_PRIORITY } = require("../Game/databaseOperations");
-const { POSITION_CATEGORY_MAP } = require("../Admin/Scoring/helpers/scoringCategoryMap");
-const { calculateEntityScore } = require("../services/calculateFantasyPoints");
-const { ROUND_CONFIG } = require("../logic/roundRules");
+const {LOCKED_ROUND_PRIORITY} = require("../Game/databaseOperations");
+const {POSITION_CATEGORY_MAP} = require("../Admin/Scoring/helpers/scoringCategoryMap");
+const {calculateEntityScore} = require("../services/calculateFantasyPoints");
+const {ROUND_CONFIG} = require("../logic/roundRules");
 
 async function getOverview(req) {
     await client.connect();
@@ -12,14 +12,14 @@ async function getOverview(req) {
     const scoresCollection = db.collection("Scores");
     const gameInfoCollection = db.collection("GameInfo");
 
-    const { round: currentRound } = await getRoundForOverview(req);
+    const {round: currentRound} = await getRoundForOverview(req);
     const allRounds = Object.keys(ROUND_CONFIG);
 
     /* ----------------------------------------
        Determine which rounds are LOCKED
     ----------------------------------------- */
     const lockedGames = await gameInfoCollection
-        .find({ status: "Locked" }, { projection: { round: 1 } })
+        .find({status: "Locked"}, {projection: {round: 1}})
         .toArray();
 
     const lockedRounds = new Set(lockedGames.map(g => g.round));
@@ -41,7 +41,7 @@ async function getOverview(req) {
        Build user data
     ----------------------------------------- */
     for (const pick of picks) {
-        const { email, firstName, lastName, round, roster = [] } = pick;
+        const {email, firstName, lastName, round, roster = []} = pick;
 
         if (!userMap.has(email)) {
             const perRoundScores = {};
@@ -115,12 +115,31 @@ async function getOverview(req) {
         );
     }
 
+    const rankedUsers = Array.from(userMap.values()).sort(
+        (a, b) => b.totalScore - a.totalScore
+    );
+
+    let currentRank = 0;
+    let lastScore = null;
+    let position = 0;
+
+    for (const user of rankedUsers) {
+        position++;
+
+        if (lastScore === null || user.totalScore !== lastScore) {
+            currentRank = position;
+            lastScore = user.totalScore;
+        }
+
+        user.rank = currentRank;
+    }
+
     return {
         status: 200,
         data: {
             currentRound,
             rounds: allRounds,
-            users: Array.from(userMap.values()),
+            users: rankedUsers,
         },
     };
 }
@@ -135,14 +154,14 @@ async function getRoundForOverview() {
     const allRounds = Object.keys(ROUND_CONFIG);
 
     async function roundHasScores(round) {
-        const count = await scoresCollection.countDocuments({ round });
+        const count = await scoresCollection.countDocuments({round});
         return count > 0;
     }
 
     /* Step 1: Prefer any Active round WITH scores */
     const activeGame = await gameInfoCollection.findOne(
-        { status: "Active" },
-        { projection: { _id: 0 } }
+        {status: "Active"},
+        {projection: {_id: 0}}
     );
 
     if (activeGame) {
@@ -162,9 +181,9 @@ async function getRoundForOverview() {
         .find(
             {
                 status: "Locked",
-                round: { $in: LOCKED_ROUND_PRIORITY },
+                round: {$in: LOCKED_ROUND_PRIORITY},
             },
-            { projection: { _id: 0 } }
+            {projection: {_id: 0}}
         )
         .toArray();
 

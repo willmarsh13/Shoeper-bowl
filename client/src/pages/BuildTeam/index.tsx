@@ -42,13 +42,13 @@ const BuildTeam: React.FC = () => {
             .then(([teamData, gameInfo]) => {
                 dispatch(setTeams(gameInfo.teams));
                 setGameStatus(gameInfo.status); // store status
-
-                if (teamData?.round && teamData?.roster?.length) {
+                if (teamData?.currentRound && teamData?.results?.length) {
+                    const activeRoster = teamData.results.find((r: any) => r.round === teamData.currentRound);
                     dispatch(setRosterFromApi({
-                        round: teamData.round,
-                        roster: teamData.roster,
+                        round: gameInfo.round,
+                        roster: activeRoster?.roster,
                     }));
-                    setInitialRoster(teamData.roster);
+                    setInitialRoster(activeRoster?.roster);
                 } else {
                     dispatch(setRound(gameInfo.round));
                     setInitialRoster(null);
@@ -74,14 +74,6 @@ const BuildTeam: React.FC = () => {
     useEffect(() => {
         dispatch(fetchPlayers({}) as any);
     }, [dispatch]);
-
-    const teamCounts = useMemo(() => {
-        const map: Record<string, number> = {};
-        roster?.forEach(s => {
-            if (s.player) map[s.player.team] = (map[s.player.team] || 0) + 1;
-        });
-        return map;
-    }, [roster]);
 
     const maxPerTeam = useMemo(() => {
         const config = ROUND_CONFIG[round as PlayoffRound];
@@ -141,7 +133,8 @@ const BuildTeam: React.FC = () => {
         <>
             <Container maxWidth="lg" sx={{py: 4}}>
                 <Stack direction='row' justifyContent='space-between'>
-                    <Typography variant="h4" gutterBottom>{`${ROUND_CONFIG[round].displayName} Roster Builder`}</Typography>
+                    <Typography variant="h4"
+                                gutterBottom>{`${ROUND_CONFIG[round]?.displayName} Roster Builder`}</Typography>
                     <Box>
                         <Tooltip title="Game Info & Rules">
                             <IconButton color='primary' onClick={() => setRulesModalOpen(!rulesModalOpen)}>
